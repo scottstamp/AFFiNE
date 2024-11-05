@@ -1,6 +1,7 @@
 import { GraphQLService } from '@affine/core/modules/cloud';
 import { OpenInAppPage } from '@affine/core/modules/open-in-app/views/open-in-app-page';
 import { appSchemaUrl, appSchemes, channelToScheme } from '@affine/core/utils';
+import { extractLinkSearchParams } from '@affine/core/utils/link';
 import type { GetCurrentUserQuery } from '@affine/graphql';
 import { getCurrentUserQuery } from '@affine/graphql';
 import { useService } from '@toeverything/infra';
@@ -27,13 +28,7 @@ export const loader: LoaderFunction = async args => {
   const action = args.params.action || '';
 
   try {
-    const { url, ...params } = Array.from(
-      new URL(args.request.url).searchParams.entries()
-    ).reduce(
-      (acc, [k, v]) => ((acc[k] = v), acc),
-      {} as Record<string, string>
-    );
-
+    const { url, ...params } = extractLinkSearchParams(args.request.url);
     return LoaderData.parse({ action, url, params });
   } catch (e) {
     console.error(e);
