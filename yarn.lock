@@ -821,6 +821,7 @@ __metadata:
     graphql-scalars: "npm:^1.23.0"
     graphql-upload: "npm:^17.0.0"
     html-validate: "npm:^8.20.1"
+    htmlrewriter: "npm:^0.0.12"
     ioredis: "npm:^5.3.2"
     is-mobile: "npm:^5.0.0"
     keyv: "npm:^5.0.0"
@@ -843,6 +844,7 @@ __metadata:
     socket.io: "npm:^4.7.5"
     stripe: "npm:^17.0.0"
     supertest: "npm:^7.0.0"
+    tldts: "npm:^6.1.58"
     ts-node: "npm:^10.9.2"
     typescript: "npm:^5.6.3"
     yjs: "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
@@ -21892,6 +21894,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"htmlrewriter@npm:^0.0.12":
+  version: 0.0.12
+  resolution: "htmlrewriter@npm:0.0.12"
+  checksum: 10/8e1b39c52957c42fbf989f805504c92821fddcd7d3b42a0de0ac87dedaf3f45df1c2d4e4d47c371ff0395471faf6fe67c70d0c9b871787842a4ce19261dfd8a1
+  languageName: node
+  linkType: hard
+
 "http-cache-semantics@npm:^4.0.0, http-cache-semantics@npm:^4.1.0, http-cache-semantics@npm:^4.1.1":
   version: 4.1.1
   resolution: "http-cache-semantics@npm:4.1.1"
@@ -31434,6 +31443,24 @@ __metadata:
   version: 3.0.0
   resolution: "titleize@npm:3.0.0"
   checksum: 10/71fbbeabbfb36ccd840559f67f21e356e1d03da2915b32d2ae1a60ddcc13a124be2739f696d2feb884983441d159a18649e8d956648d591bdad35c430a6b6d28
+  languageName: node
+  linkType: hard
+
+"tldts-core@npm:^6.1.58":
+  version: 6.1.58
+  resolution: "tldts-core@npm:6.1.58"
+  checksum: 10/8dae4470ab6184e4df2c42421ee0dcdafe8c6baff699ee4a75f376d147a3675fff63c680e2c5d7318a3128bd90ae1c9a784ba3511dcd6d8ca5385a29169b29bf
+  languageName: node
+  linkType: hard
+
+"tldts@npm:^6.1.58":
+  version: 6.1.58
+  resolution: "tldts@npm:6.1.58"
+  dependencies:
+    tldts-core: "npm:^6.1.58"
+  bin:
+    tldts: bin/cli.js
+  checksum: 10/0f36a72a645ff6b09b02e5935a80a0d100c500873520f9a69f33a92a64fe1e0602b008dd9ea959296916187ab2b41ae7e9e93039b3d930cc3031fde90d5ea127
   languageName: node
   linkType: hard
 

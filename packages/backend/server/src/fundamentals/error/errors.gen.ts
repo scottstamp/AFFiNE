@@ -22,6 +22,12 @@ export class NotFound extends UserFriendlyError {
   }
 }
 
+export class BadRequest extends UserFriendlyError {
+  constructor(message?: string) {
+    super('bad_request', 'bad_request', message);
+  }
+}
+
 export class UserNotFound extends UserFriendlyError {
   constructor(message?: string) {
     super('resource_not_found', 'user_not_found', message);
@@ -543,6 +549,7 @@ export enum ErrorNames {
   INTERNAL_SERVER_ERROR,
   TOO_MANY_REQUEST,
   NOT_FOUND,
+  BAD_REQUEST,
   USER_NOT_FOUND,
   USER_AVATAR_NOT_FOUND,
   EMAIL_ALREADY_USED,

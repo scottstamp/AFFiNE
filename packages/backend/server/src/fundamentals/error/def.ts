@@ -213,6 +213,10 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'resource_not_found',
     message: 'Resource not found.',
   },
+  bad_request: {
+    type: 'bad_request',
+    message: 'Bad request.',
+  },
 
   // User Errors
   user_not_found: {
