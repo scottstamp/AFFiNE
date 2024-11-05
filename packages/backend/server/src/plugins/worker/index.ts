@@ -5,9 +5,7 @@ import { WorkerController } from './controller';
 
 @Plugin({
   name: 'worker',
-  imports: [],
-  providers: [],
   controllers: [WorkerController],
-  if: config => config.isSelfhosted,
+  if: config => config.isSelfhosted || config.node.dev || config.node.test,
 })
-export class CopilotModule {}
+export class WorkerModule {}
