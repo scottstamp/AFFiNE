@@ -386,6 +386,8 @@ export const createConfiguration: (
           changeOrigin: true,
           secure: false,
         },
+        { context: '/oauth/login', target: 'http://localhost:3010' },
+        { context: '/desktop-signin', target: 'http://localhost:3010' },
         { context: '/api', target: 'http://localhost:3010' },
         { context: '/socket.io', target: 'http://localhost:3010', ws: true },
         { context: '/graphql', target: 'http://localhost:3010' },
