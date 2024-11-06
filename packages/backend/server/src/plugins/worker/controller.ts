@@ -1,4 +1,12 @@
-import { Controller, Get, Logger, Options, Req, Res } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Logger,
+  Options,
+  Post,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { HTMLRewriter } from 'htmlrewriter';
 
@@ -86,6 +94,7 @@ export class WorkerController {
       .send();
   }
 
+  @Post('/link-preview')
   async linkPreview(
     @Req() request: Request,
     @Res() resp: Response
@@ -96,22 +105,16 @@ export class WorkerController {
       (origin && !isOriginAllowed(origin, this.allowedOrigin)) ||
       (referer && !isRefererAllowed(referer, this.allowedOrigin))
     ) {
-      this.logger.error('Invalid Origin', 'ERROR', { origin, referer });
+      this.logger.error('Invalid Origin', { origin, referer });
       throw new BadRequest('Invalid header');
     }
 
-    this.logger.error('Received request', 'INFO', {
-      origin,
-      method: request.method,
-    });
+    this.logger.debug('Received request', { origin, method: request.method });
 
     const targetBody = parseJson<LinkPreviewRequest>(request.body);
     const targetURL = fixUrl(targetBody?.url);
     if (!targetURL) {
-      this.logger.error('Invalid URL', 'ERROR', {
-        origin,
-        url: targetBody?.url,
-      });
+      this.logger.error('Invalid URL', { origin, url: targetBody?.url });
       throw new BadRequest('Invalid URL');
     }
 
@@ -133,6 +136,7 @@ export class WorkerController {
         videos: [],
         favicons: [],
       };
+      const baseUrl = new URL(request.url, this.url.baseUrl).toString();
 
       if (response.body) {
         const rewriter = new HTMLRewriter()
@@ -197,7 +201,7 @@ export class WorkerController {
 
         await rewriter.transform(response).text();
 
-        res.images = await reduceUrls(request.url, res.images);
+        res.images = await reduceUrls(baseUrl, res.images);
 
         this.logger.error('Processed response with HTMLRewriter', 'INFO', {
           origin,
@@ -214,7 +218,7 @@ export class WorkerController {
           appendUrl(faviconUrl.toString(), res.favicons);
         }
 
-        res.favicons = await reduceUrls(request.url, res.favicons);
+        res.favicons = await reduceUrls(baseUrl, res.favicons);
       }
 
       const json = JSON.stringify(res);
@@ -230,7 +234,7 @@ export class WorkerController {
           'content-type': 'application/json;charset=UTF-8',
           ...getCorsHeaders(origin),
         })
-        .send();
+        .send(json);
     } catch (error) {
       this.logger.error('Error fetching URL', {
         origin,
