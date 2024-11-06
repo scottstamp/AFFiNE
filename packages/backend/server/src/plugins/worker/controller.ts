@@ -10,7 +10,7 @@ import {
 import type { Request, Response } from 'express';
 import { HTMLRewriter } from 'htmlrewriter';
 
-import { BadRequest, URLHelper } from '../../fundamentals';
+import { BadRequest, Config, URLHelper } from '../../fundamentals';
 import type { LinkPreviewRequest, LinkPreviewResponse } from './types';
 import {
   appendUrl,
@@ -29,13 +29,29 @@ export class WorkerController {
   private readonly logger = new Logger(WorkerController.name);
   private readonly allowedOrigin: OriginRules;
 
-  constructor(private readonly url: URLHelper) {
-    this.allowedOrigin = url.origin;
+  constructor(
+    config: Config,
+    private readonly url: URLHelper
+  ) {
+    this.allowedOrigin = [
+      ...config.plugins.worker.allowedOrigin
+        .map(u => fixUrl(u)?.origin as string)
+        .filter(v => !!v),
+      url.origin,
+    ];
   }
 
   @Get('/image-proxy')
   async imageProxy(@Req() req: Request, @Res() resp: Response) {
     const origin = req.headers.origin ?? '';
+    const referer = req.headers.referer;
+    if (
+      (origin && !isOriginAllowed(origin, this.allowedOrigin)) ||
+      (referer && !isRefererAllowed(referer, this.allowedOrigin))
+    ) {
+      this.logger.error('Invalid Origin', 'ERROR', { origin, referer });
+      throw new BadRequest('Invalid header');
+    }
     const url = new URL(req.url, this.url.baseUrl);
     const imageURL = url.searchParams.get('url');
     if (!imageURL) {

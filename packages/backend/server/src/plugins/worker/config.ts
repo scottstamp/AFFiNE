@@ -1,6 +1,8 @@
 import { defineStartupConfig, ModuleConfig } from '../../fundamentals/config';
 
-export interface WorkerStartupConfigurations {}
+export interface WorkerStartupConfigurations {
+  allowedOrigin: string[];
+}
 
 declare module '../config' {
   interface PluginsConfig {
@@ -8,4 +10,6 @@ declare module '../config' {
   }
 }
 
-defineStartupConfig('plugins.worker', {});
+defineStartupConfig('plugins.worker', {
+  allowedOrigin: [],
+});
