@@ -113,7 +113,8 @@ export class WorkerController {
 
     const targetBody = parseJson<LinkPreviewRequest>(request.body);
     const targetURL = fixUrl(targetBody?.url);
-    if (!targetURL) {
+    // not allow same site preview
+    if (!targetURL || isOriginAllowed(targetURL.origin, this.allowedOrigin)) {
       this.logger.error('Invalid URL', { origin, url: targetBody?.url });
       throw new BadRequest('Invalid URL');
     }
@@ -124,7 +125,7 @@ export class WorkerController {
       const response = await fetch(targetURL, {
         headers: cloneHeader(request.headers),
       });
-      this.logger.error('Fetched URL', 'INFO', {
+      this.logger.error('Fetched URL', {
         origin,
         url: targetURL,
         status: response.status,
@@ -203,7 +204,7 @@ export class WorkerController {
 
         res.images = await reduceUrls(baseUrl, res.images);
 
-        this.logger.error('Processed response with HTMLRewriter', 'INFO', {
+        this.logger.error('Processed response with HTMLRewriter', {
           origin,
           url: response.url,
         });
