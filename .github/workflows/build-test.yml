@@ -494,8 +494,15 @@ jobs:
             echo "skip=true" >> $GITHUB_OUTPUT
           fi
 
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'packages/backend/server/src/**'
+
       - name: Setup Node.js
-        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' }}
+        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
         uses: ./.github/actions/setup-node
         with:
           playwright-install: true
@@ -503,14 +510,14 @@ jobs:
           hard-link-nm: false
 
       - name: Download server-native.node
-        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' }}
+        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
         uses: actions/download-artifact@v4
         with:
           name: server-native.node
           path: ./packages/backend/server
 
       - name: Run Copilot E2E Test ${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' }}
+        if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
         uses: ./.github/actions/copilot-test
         with:
           script: yarn workspace @affine-test/affine-cloud-copilot e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
