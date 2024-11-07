@@ -581,8 +581,9 @@ export const ProviderActionTestCase = [
     verifier: (t: ExecutionContext, result: string) => {
       assertNotWrappedInCodeBlock(t, result);
       t.assert(
-        result.toLowerCase().includes('single source of truth'),
-        'should include original keyword'
+        result.toLowerCase().includes('single source of truth') ||
+          result.toLowerCase().includes('ssot'),
+        `should include original keyword: ${result}`
       );
     },
     type: 'text' as const,

@@ -42,6 +42,10 @@ jobs:
       NODE_ENV: test
       DISTRIBUTION: web
       DATABASE_URL: postgresql://affine:affine@localhost:5432/affine
+    strategy:
+      fail-fast: false
+      matrix:
+        type: [e2e, spec]
     services:
       postgres:
         image: postgres
@@ -78,12 +82,16 @@ jobs:
       - name: Prepare Server Test Environment
         uses: ./.github/actions/server-test-env
 
-      - name: Run server tests
-        run: yarn workspace @affine/server test:copilot:coverage --forbid-only
+      - name: Run copilot api ${{ matrix.type }} tests
+        run: yarn workspace @affine/server test:copilot:${{ matrix.type }}:coverage --forbid-only
         env:
           CARGO_TARGET_DIR: '${{ github.workspace }}/target'
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           COPILOT_FAL_API_KEY: ${{ secrets.COPILOT_FAL_API_KEY }}
+          COPILOT_E2E_ENDPOINT: ${{ secrets.COPILOT_E2E_ENDPOINT }}
+          COPILOT_E2E_USER: ${{ secrets.COPILOT_E2E_USER }}
+          COPILOT_E2E_PASSWORD: ${{ secrets.COPILOT_E2E_PASSWORD }}
+          COPILOT_E2E_SECRET: ${{ secrets.COPILOT_E2E_SECRET }}
 
       - name: Upload server test coverage results
         uses: codecov/codecov-action@v5
