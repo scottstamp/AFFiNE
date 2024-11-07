@@ -438,7 +438,7 @@ jobs:
 
       - name: Run server tests
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
-        run: yarn workspace @affine/server test:copilot:coverage --forbid-only
+        run: yarn workspace @affine/server test:copilot:spec:coverage --forbid-only
         env:
           CARGO_TARGET_DIR: '${{ github.workspace }}/target'
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
