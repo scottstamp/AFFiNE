@@ -293,9 +293,14 @@ export function sse2array(eventSource: string) {
     block.split('\n').reduce(
       (prev, curr) => {
         const [key, ...values] = curr.split(': ');
-        return Object.assign(prev, {
-          [key]: (prev[key] || '') + values.join(': '),
-        });
+        const value = values.join(': ');
+        const finalValue = value ? value : '\n';
+        if (prev[key]) {
+          const prevValue = finalValue === '\n' ? prev[key] : prev[key] + '\n';
+          return Object.assign(prev, { [key]: prevValue + finalValue });
+        } else {
+          return Object.assign(prev, { [key]: finalValue });
+        }
       },
       {} as Record<string, string>
     )

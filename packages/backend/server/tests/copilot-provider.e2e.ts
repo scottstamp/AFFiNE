@@ -10,9 +10,11 @@ import { automaticSignIn, createWorkspace } from './utils';
 import {
   chatWithImages,
   chatWithText,
+  chatWithWorkflow,
   createCopilotMessage,
   createCopilotSession,
   ProviderActionTestCase,
+  ProviderWorkflowTestCase,
   sse2array,
 } from './utils/copilot';
 
@@ -60,6 +62,31 @@ const retry = async (
   t.fail(`failed to run ${action}`);
 };
 
+const makeCopilotChat = async (
+  t: ExecutionContext<Tester>,
+  promptName: string,
+  { content, attachments, params }: any
+) => {
+  const { app, userToken, workspaceId } = t.context;
+  const sessionId = await createCopilotSession(
+    app,
+    userToken,
+    workspaceId,
+    randomUUID(),
+    promptName
+  );
+  const messageId = await createCopilotMessage(
+    app,
+    userToken,
+    sessionId,
+    content,
+    attachments,
+    undefined,
+    params
+  );
+  return { sessionId, messageId };
+};
+
 // ==================== action ====================
 
 for (const { promptName, messages, verifier, type } of ProviderActionTestCase) {
@@ -67,24 +94,11 @@ for (const { promptName, messages, verifier, type } of ProviderActionTestCase) {
   for (const promptName of prompts) {
     test(`should be able to run action: ${promptName}`, async t => {
       await retry(`action: ${promptName}`, t, async t => {
-        // @ts-expect-error
-        const { content, attachments, params } = messages[0];
-        const { app, userToken, workspaceId } = t.context;
-        const sessionId = await createCopilotSession(
-          app,
-          userToken,
-          workspaceId,
-          randomUUID(),
-          promptName
-        );
-        const messageId = await createCopilotMessage(
-          app,
-          userToken,
-          sessionId,
-          content,
-          attachments,
-          undefined,
-          params
+        const { app, userToken } = t.context;
+        const { sessionId, messageId } = await makeCopilotChat(
+          t,
+          promptName,
+          messages[0]
         );
 
         if (type === 'text') {
@@ -113,4 +127,25 @@ for (const { promptName, messages, verifier, type } of ProviderActionTestCase) {
       });
     });
   }
+}
+
+// ==================== workflow ====================
+
+for (const { name, content, verifier } of ProviderWorkflowTestCase) {
+  test(`should be able to run workflow: ${name}`, async t => {
+    await retry(`workflow: ${name}`, t, async t => {
+      const { app, userToken } = t.context;
+      const { sessionId, messageId } = await makeCopilotChat(
+        t,
+        `workflow:${name}`,
+        { content }
+      );
+      const r = await chatWithWorkflow(app, userToken, sessionId, messageId);
+      const result = sse2array(r)
+        .filter(e => e.event !== 'event' && e.data)
+        .reduce((p, c) => p + c.data, '');
+      t.truthy(result, 'should return result');
+      verifier?.(t, result);
+    });
+  });
 }

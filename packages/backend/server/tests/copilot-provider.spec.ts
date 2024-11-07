@@ -27,7 +27,11 @@ import {
   CopilotCheckJsonExecutor,
 } from '../src/plugins/copilot/workflow/executor';
 import { createTestingModule } from './utils';
-import { checkMDList, ProviderActionTestCase } from './utils/copilot';
+import {
+  checkMDList,
+  ProviderActionTestCase,
+  ProviderWorkflowTestCase,
+} from './utils/copilot';
 
 type Tester = {
   auth: AuthService;
@@ -271,28 +275,7 @@ for (const { promptName, messages, verifier, type } of ProviderActionTestCase) {
 
 // ==================== workflow ====================
 
-const workflows = [
-  {
-    name: 'brainstorm',
-    content: 'apple company',
-    verifier: (t: ExecutionContext, result: string) => {
-      t.assert(checkMDList(result), 'should be a markdown list');
-    },
-  },
-  {
-    name: 'presentation',
-    content: 'apple company',
-    verifier: (t: ExecutionContext, result: string) => {
-      for (const l of result.split('\n')) {
-        t.notThrows(() => {
-          JSON.parse(l.trim());
-        }, 'should be valid json');
-      }
-    },
-  },
-];
-
-for (const { name, content, verifier } of workflows) {
+for (const { name, content, verifier } of ProviderWorkflowTestCase) {
   test(
     `should be able to run workflow: ${name}`,
     runIfCopilotConfigured,
