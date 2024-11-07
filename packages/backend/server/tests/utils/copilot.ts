@@ -293,7 +293,9 @@ export function sse2array(eventSource: string) {
     block.split('\n').reduce(
       (prev, curr) => {
         const [key, ...values] = curr.split(': ');
-        return Object.assign(prev, { [key]: values.join(': ') });
+        return Object.assign(prev, {
+          [key]: (prev[key] || '') + values.join(': '),
+        });
       },
       {} as Record<string, string>
     )
@@ -688,5 +690,26 @@ export const ProviderActionTestCase = [
       t.truthy(checkUrl(link), 'should be a valid url');
     },
     type: 'image' as const,
+  },
+];
+
+export const ProviderWorkflowTestCase = [
+  {
+    name: 'brainstorm',
+    content: 'apple company',
+    verifier: (t: ExecutionContext, result: string) => {
+      t.assert(checkMDList(result), 'should be a markdown list');
+    },
+  },
+  {
+    name: 'presentation',
+    content: 'apple company',
+    verifier: (t: ExecutionContext, result: string) => {
+      for (const l of result.split('\n')) {
+        t.notThrows(() => {
+          JSON.parse(l.trim());
+        }, 'should be valid json');
+      }
+    },
   },
 ];
