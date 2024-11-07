@@ -41,6 +41,14 @@ export interface AuthRuntimeConfigurations {
   allowSignup: boolean;
 
   /**
+   * Whether allow automatic sign in
+   */
+  automaticSignIn: {
+    enabled: boolean;
+    secret: string;
+  };
+
+  /**
    * Whether require email domain record verification before access restricted resources
    */
   requireEmailDomainVerification: boolean;
@@ -80,6 +88,14 @@ defineRuntimeConfig('auth', {
   allowSignup: {
     desc: 'Whether allow new registrations',
     default: true,
+  },
+  'automaticSignIn.enabled': {
+    desc: 'Whether allow automatic sign in',
+    default: false,
+  },
+  'automaticSignIn.secret': {
+    desc: 'The secret key for automatic sign in',
+    default: 'affine',
   },
   requireEmailDomainVerification: {
     desc: 'Whether require email domain record verification before accessing restricted resources',

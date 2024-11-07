@@ -20,6 +20,7 @@ import {
   InternalServerError,
   InvalidEmail,
   InvalidEmailToken,
+  NotFound,
   SignUpForbidden,
   Throttle,
   URLHelper,
@@ -41,6 +42,7 @@ interface SignInCredential {
   email: string;
   password?: string;
   callbackUrl?: string;
+  secret?: string;
 }
 
 interface MagicLinkCredential {
@@ -93,6 +95,35 @@ export class AuthController {
       registered: user.registered,
       hasPassword: !!user.password,
     };
+  }
+
+  @Public()
+  @Post('/sign-in/automatic')
+  @Header('content-type', 'application/json')
+  async internalSignIn(
+    @Req() req: Request,
+    @Res() res: Response,
+    @Body() credential: SignInCredential
+  ) {
+    const automaticSignIn = await this.config.runtime.fetchAll({
+      'auth/automaticSignIn.enabled': true,
+      'auth/automaticSignIn.secret': true,
+    });
+    if (
+      automaticSignIn['auth/automaticSignIn.enabled'] &&
+      automaticSignIn['auth/automaticSignIn.secret'] === credential.secret &&
+      credential.password
+    ) {
+      validators.assertValidEmail(credential.email);
+      await this.passwordSignIn(
+        req,
+        res,
+        credential.email,
+        credential.password
+      );
+    } else {
+      throw new NotFound();
+    }
   }
 
   @Public()
