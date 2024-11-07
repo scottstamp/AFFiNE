@@ -18,6 +18,21 @@ export async function internalSignIn(app: INestApplication, userId: string) {
   return `${AuthService.sessionCookieName}=${session.sessionId}`;
 }
 
+export async function automaticSignIn(
+  app: INestApplication,
+  email: string,
+  password: string,
+  secret: string
+) {
+  const cookie = await request(app.getHttpServer())
+    .post('/api/auth/sign-in/automatic')
+    .send({ email, password, secret })
+    .expect(200)
+    .then(r => sessionCookie(r.headers));
+
+  return cookie.split('=')[1];
+}
+
 export function sessionCookie(headers: any): string {
   const cookie = headers['set-cookie']?.find((c: string) =>
     c.startsWith(`${AuthService.sessionCookieName}=`)

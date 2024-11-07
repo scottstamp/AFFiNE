@@ -27,7 +27,7 @@ import {
   CopilotCheckJsonExecutor,
 } from '../src/plugins/copilot/workflow/executor';
 import { createTestingModule } from './utils';
-import { TestAssets } from './utils/copilot';
+import { checkMDList, checkUrl, TestAssets } from './utils/copilot';
 
 type Tester = {
   auth: AuthService;
@@ -139,48 +139,6 @@ const assertNotWrappedInCodeBlock = (
       !result.replaceAll('\n', '').trim().endsWith('```'),
     'should not wrap in code block'
   );
-};
-
-const checkMDList = (text: string) => {
-  const lines = text.split('\n');
-  const listItemRegex = /^( {2})*(-|\u2010-\u2015|\*|\+)? .+$/;
-  let prevIndent = null;
-
-  for (const line of lines) {
-    if (line.trim() === '') continue;
-    if (!listItemRegex.test(line)) {
-      return false;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-asserted-optional-chain
-    const currentIndent = line.match(/^( *)/)?.[0].length!;
-    if (Number.isNaN(currentIndent) || currentIndent % 2 !== 0) {
-      return false;
-    }
-
-    if (prevIndent !== null && currentIndent > 0) {
-      const indentDiff = currentIndent - prevIndent;
-      // allow 1 level of indentation difference
-      if (indentDiff > 2) {
-        return false;
-      }
-    }
-
-    if (line.trim().startsWith('-')) {
-      prevIndent = currentIndent;
-    }
-  }
-
-  return true;
-};
-
-const checkUrl = (url: string) => {
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return false;
-  }
 };
 
 const retry = async (
