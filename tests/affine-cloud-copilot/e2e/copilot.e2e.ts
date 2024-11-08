@@ -1,12 +1,6 @@
-/// <reference types="../src/global.d.ts" />
-
 import { randomUUID } from 'node:crypto';
 
-import { INestApplication } from '@nestjs/common';
-import type { ExecutionContext, TestFn } from 'ava';
-import ava from 'ava';
-
-import { automaticSignIn, createWorkspace } from './utils';
+import { automaticSignIn, createWorkspace } from '@affine/server/tests/utils';
 import {
   chatWithImages,
   chatWithText,
@@ -16,10 +10,12 @@ import {
   ProviderActionTestCase,
   ProviderWorkflowTestCase,
   sse2array,
-} from './utils/copilot';
+} from '@affine/server/tests/utils/copilot';
+import type { ExecutionContext, TestFn } from 'ava';
+import ava from 'ava';
 
 type Tester = {
-  app: INestApplication<any>;
+  app: any;
   userToken: string;
   workspaceId: string;
 };
@@ -54,7 +50,7 @@ const runIfCopilotConfigured = test.macro(
 test.before(async t => {
   if (!isCopilotConfigured) return;
   const { endpoint, user, password, secret } = e2eConfig;
-  const app = { getHttpServer: () => endpoint } as INestApplication<any>;
+  const app = { getHttpServer: () => endpoint } as any;
   const token = await automaticSignIn(app, user, password, secret);
   const { id } = await createWorkspace(app, token);
 

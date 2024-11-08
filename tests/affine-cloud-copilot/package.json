@@ -2,11 +2,15 @@
   "name": "@affine-test/affine-cloud-copilot",
   "private": true,
   "scripts": {
-    "e2e": "yarn playwright test"
+    "test:e2e": "yarn playwright test",
+    "test:api": "ava \"tests/**/copilot-*.e2e.ts\"",
+    "test:api:coverage": "c8 ava --timeout=5m \"tests/**/copilot-*.e2e.ts\""
   },
   "devDependencies": {
     "@affine-test/kit": "workspace:*",
-    "@playwright/test": "=1.49.0"
+    "@affine/server": "workspace:*",
+    "@playwright/test": "=1.49.0",
+    "ava": "^6.1.2"
   },
   "version": "0.18.0"
 }

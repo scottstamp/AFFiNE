@@ -417,6 +417,7 @@ jobs:
           filters: |
             backend:
               - 'packages/backend/server/src/**'
+              - 'tests/affine-cloud-copilot/**'
 
       - name: Setup Node.js
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
@@ -500,6 +501,7 @@ jobs:
           filters: |
             backend:
               - 'packages/backend/server/src/**'
+              - 'tests/affine-cloud-copilot/**'
 
       - name: Setup Node.js
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
@@ -520,7 +522,7 @@ jobs:
         if: ${{ steps.check-blocksuite-update.outputs.skip != 'true' || steps.filter.outputs.backend == 'true' }}
         uses: ./.github/actions/copilot-test
         with:
-          script: yarn workspace @affine-test/affine-cloud-copilot e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+          script: yarn workspace @affine-test/affine-cloud-copilot test:e2e --forbid-only --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
           openai-key: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           fal-key: ${{ secrets.COPILOT_FAL_API_KEY }}
 
