@@ -10,7 +10,7 @@ import {
 import type { Request, Response } from 'express';
 import { HTMLRewriter } from 'htmlrewriter';
 
-import { BadRequest, Config, URLHelper } from '../../fundamentals';
+import { BadRequest, Cache, Config, URLHelper } from '../../fundamentals';
 import type { LinkPreviewRequest, LinkPreviewResponse } from './types';
 import {
   appendUrl,
@@ -31,6 +31,7 @@ export class WorkerController {
 
   constructor(
     config: Config,
+    private readonly cache: Cache,
     private readonly url: URLHelper
   ) {
     this.allowedOrigin = [
@@ -138,6 +139,17 @@ export class WorkerController {
     this.logger.debug('Processing request', { origin, url: targetURL });
 
     try {
+      const cachedResponse = await this.cache.get<string>(targetURL.toString());
+      if (cachedResponse) {
+        return resp
+          .status(200)
+          .header({
+            'content-type': 'application/json;charset=UTF-8',
+            ...getCorsHeaders(origin),
+          })
+          .send(cachedResponse);
+      }
+
       const response = await fetch(targetURL, {
         headers: cloneHeader(request.headers),
       });
@@ -245,6 +257,7 @@ export class WorkerController {
         responseSize: json.length,
       });
 
+      await this.cache.set(targetURL.toString(), res);
       return resp
         .status(200)
         .header({
