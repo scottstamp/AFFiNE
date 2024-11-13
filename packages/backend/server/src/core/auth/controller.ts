@@ -20,11 +20,11 @@ import {
   InternalServerError,
   InvalidEmail,
   InvalidEmailToken,
-  NotFound,
   SignUpForbidden,
   Throttle,
   URLHelper,
   UseNamedGuard,
+  WrongSignInCredentials,
 } from '../../fundamentals';
 import { UserService } from '../user';
 import { validators } from '../utils/validators';
@@ -122,7 +122,7 @@ export class AuthController {
         credential.password
       );
     } else {
-      throw new NotFound();
+      throw new WrongSignInCredentials();
     }
   }
 
