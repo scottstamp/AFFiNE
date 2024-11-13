@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { automaticSignIn, createWorkspace } from '@affine/server/tests/utils';
+import { createWorkspace } from '@affine/server/tests/utils';
 import {
   chatWithImages,
   chatWithText,
@@ -11,11 +11,13 @@ import {
   ProviderWorkflowTestCase,
   sse2array,
 } from '@affine/server/tests/utils/copilot';
+import { createRandomAIUser } from '@affine-test/kit/utils/cloud';
 import type { ExecutionContext, TestFn } from 'ava';
 import ava from 'ava';
 
 type Tester = {
   app: any;
+  userEmail: string;
   userToken: string;
   workspaceId: string;
 };
@@ -23,9 +25,6 @@ const test = ava as TestFn<Tester>;
 
 const e2eConfig = {
   endpoint: process.env.COPILOT_E2E_ENDPOINT || 'http://localhost:3010',
-  user: process.env.COPILOT_E2E_USER || 'dev@affine.pro',
-  password: process.env.COPILOT_E2E_PASSWORD || 'dev',
-  secret: process.env.COPILOT_E2E_SECRET || 'affine',
 };
 
 const isCopilotConfigured =
@@ -47,16 +46,54 @@ const runIfCopilotConfigured = test.macro(
   }
 );
 
+export const runPrisma = async <T>(
+  cb: (
+    prisma: InstanceType<
+      // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+      typeof import('../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
+    >
+  ) => Promise<T>
+): Promise<T> => {
+  const {
+    PrismaClient,
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+  } = await import(
+    '../../../packages/backend/server/node_modules/@prisma/client'
+  );
+  const client = new PrismaClient();
+  await client.$connect();
+  try {
+    return await cb(client);
+  } finally {
+    await client.$disconnect();
+  }
+};
+
 test.before(async t => {
   if (!isCopilotConfigured) return;
-  const { endpoint, user, password, secret } = e2eConfig;
+  const { endpoint } = e2eConfig;
+
+  const { email, sessionId: token } = await createRandomAIUser(
+    'affine.fail',
+    runPrisma
+  );
   const app = { getHttpServer: () => endpoint } as any;
-  const token = await automaticSignIn(app, user, password, secret);
   const { id } = await createWorkspace(app, token);
 
   t.context.app = app;
+  t.context.userEmail = email;
   t.context.userToken = token;
   t.context.workspaceId = id;
+});
+
+test.after(async t => {
+  await runPrisma(async client => {
+    await client.user.delete({
+      where: {
+        email: t.context.userEmail,
+      },
+    });
+  });
 });
 
 const retry = async (

@@ -1,10 +1,15 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "esModuleInterop": true,
-    "outDir": "lib"
+    "composite": true,
+    "target": "ES2022",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "rootDir": ".",
+    "outDir": "lib",
+    "verbatimModuleSyntax": false,
+    "tsBuildInfoFile": "lib/.tsbuildinfo"
   },
-  "include": ["e2e"],
   "references": [
     {
       "path": "../../tests/kit"

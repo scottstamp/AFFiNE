@@ -95,9 +95,6 @@ jobs:
           COPILOT_OPENAI_API_KEY: ${{ secrets.COPILOT_OPENAI_API_KEY }}
           COPILOT_FAL_API_KEY: ${{ secrets.COPILOT_FAL_API_KEY }}
           COPILOT_E2E_ENDPOINT: ${{ secrets.COPILOT_E2E_ENDPOINT }}
-          COPILOT_E2E_USER: ${{ secrets.COPILOT_E2E_USER }}
-          COPILOT_E2E_PASSWORD: ${{ secrets.COPILOT_E2E_PASSWORD }}
-          COPILOT_E2E_SECRET: ${{ secrets.COPILOT_E2E_SECRET }}
 
       - name: Upload server test coverage results
         uses: codecov/codecov-action@v5
