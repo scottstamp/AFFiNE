@@ -411,6 +411,13 @@ input ListUserInput {
   skip: Int = 0
 }
 
+type ListedBlob {
+  createdAt: String!
+  key: String!
+  mime: String!
+  size: Int!
+}
+
 input ManageUserInput {
   """User email"""
   email: String
@@ -457,7 +464,7 @@ type Mutation {
   """Create a new workspace"""
   createWorkspace(init: Upload): WorkspaceType!
   deleteAccount: DeleteAccount!
-  deleteBlob(hash: String!, workspaceId: String!): Boolean!
+  deleteBlob(hash: String @deprecated(reason: "use parameter [key]"), key: String, permanently: Boolean! = false, workspaceId: String!): Boolean!
 
   """Delete a user account"""
   deleteUser(id: String!): DeleteAccount!
@@ -469,6 +476,7 @@ type Mutation {
   leaveWorkspace(sendLeaveMail: Boolean, workspaceId: String!, workspaceName: String!): Boolean!
   publishPage(mode: PublicPageMode = Page, pageId: String!, workspaceId: String!): WorkspacePage!
   recoverDoc(guid: String!, timestamp: DateTime!, workspaceId: String!): DateTime!
+  releaseDeletedBlobs(workspaceId: String!): Boolean!
 
   """Remove user avatar"""
   removeAvatar: RemoveAvatar!
@@ -541,8 +549,7 @@ enum PublicPageMode {
 }
 
 type Query {
-  checkBlobSize(size: SafeInt!, workspaceId: String!): WorkspaceBlobSizes! @deprecated(reason: "no more needed")
-  collectAllBlobSizes: WorkspaceBlobSizes! @deprecated(reason: "use `user.storageUsage` instead")
+  collectAllBlobSizes: WorkspaceBlobSizes! @deprecated(reason: "use `user.quotaUsage` instead")
 
   """Get current user"""
   currentUser: UserType
@@ -825,6 +832,10 @@ type UserQuotaHumanReadable {
   storageQuota: String!
 }
 
+type UserQuotaUsage {
+  storageQuota: SafeInt!
+}
+
 type UserSubscription {
   canceledAt: DateTime
   createdAt: DateTime!
@@ -874,6 +885,7 @@ type UserType {
   """User name"""
   name: String!
   quota: UserQuota
+  quotaUsage: UserQuotaUsage!
   subscription(plan: SubscriptionPlan = Pro): UserSubscription @deprecated(reason: "use `UserType.subscriptions`")
   subscriptions: [UserSubscription!]!
   token: tokenType! @deprecated(reason: "use [/api/auth/sign-in?native=true] instead")
@@ -907,7 +919,7 @@ type WorkspaceType {
   availableFeatures: [FeatureType!]!
 
   """List blobs of workspace"""
-  blobs: [String!]!
+  blobs: [ListedBlob!]!
 
   """Blobs size of workspace"""
   blobsSize: Int!

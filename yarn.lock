@@ -718,14 +718,18 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@affine/nbstore@workspace:packages/common/nbstore"
   dependencies:
+    "@affine/graphql": "workspace:*"
     "@toeverything/infra": "workspace:*"
     eventemitter2: "npm:^6.4.9"
     idb: "npm:^8.0.0"
     lodash-es: "npm:^4.17.21"
     rxjs: "npm:^7.8.1"
+    socket.io-client: "npm:^4.7.5"
     yjs: "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
   peerDependencies:
+    "@affine/graphql": "workspace:*"
     idb: ^8.0.0
+    socket.io-client: ^4.7.5
   languageName: unknown
   linkType: soft
 

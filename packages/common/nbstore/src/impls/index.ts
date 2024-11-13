@@ -1,4 +1,5 @@
 import type { Storage } from '../storage';
+import { CloudBlobStorage, CloudDocStorage } from './cloud';
 import {
   IndexedDBBlobStorage,
   IndexedDBDocStorage,
@@ -19,7 +20,9 @@ const idbv1: StorageConstructor[] = [
   IndexedDBV1BlobStorage,
 ];
 
-export const storages: StorageConstructor[] = [...idbv1, ...idb];
+const cloud: StorageConstructor[] = [CloudDocStorage, CloudBlobStorage];
+
+export const storages: StorageConstructor[] = cloud.concat(idbv1, idb);
 
 const AvailableStorageImplementations = storages.reduce(
   (acc, curr) => {
