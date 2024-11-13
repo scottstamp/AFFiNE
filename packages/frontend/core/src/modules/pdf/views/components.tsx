@@ -3,11 +3,20 @@ import clsx from 'clsx';
 import { type CSSProperties, forwardRef, memo } from 'react';
 import type { ScrollSeekPlaceholderProps, VirtuosoProps } from 'react-virtuoso';
 
+import type { PDFMeta } from '../renderer';
+import type { PageSize } from '../renderer/types';
 import * as styles from './styles.css';
 
 export type PDFVirtuosoContext = {
-  width: number;
-  height: number;
+  viewportInfo: PageSize;
+  meta: PDFMeta;
+  resize: (
+    viewportInfo: PageSize,
+    actualSize: PageSize,
+    maxSize: PageSize,
+    isThumbnail?: boolean
+  ) => { aspectRatio: number } & PageSize;
+  isThumbnail?: boolean;
   pageClassName?: string;
   onPageSelect?: (index: number) => void;
 };
@@ -32,16 +41,29 @@ export const ScrollSeekPlaceholder = forwardRef<
   ScrollSeekPlaceholderProps & {
     context?: PDFVirtuosoContext;
   }
->(({ context }, ref) => {
+>(({ context, index }, ref) => {
   const className = context?.pageClassName;
-  const width = context?.width ?? 537;
-  const height = context?.height ?? 759;
-  const style = { width, aspectRatio: `${width} / ${height}` };
+  const isThumbnail = context?.isThumbnail;
+  const size = context?.meta.pageSizes[index];
+  const maxSize = context?.meta.maxSize;
+  const height = size?.height ?? 759;
+  const style =
+    context?.viewportInfo && size && maxSize
+      ? context.resize(context.viewportInfo, size, maxSize, isThumbnail)
+      : undefined;
 
   return (
-    <div className={className} style={style} ref={ref}>
-      <LoadingSvg />
-    </div>
+    <Item
+      data-index={index}
+      data-known-size={height}
+      data-item-index={index}
+      style={{ overflowAnchor: 'none' }}
+      ref={ref}
+    >
+      <div className={className} style={style}>
+        <LoadingSvg />
+      </div>
+    </Item>
   );
 });
 
@@ -114,8 +136,18 @@ export const LoadingSvg = memo(
 
 LoadingSvg.displayName = 'pdf-loading';
 
-export const PDFPageCanvas = forwardRef<HTMLCanvasElement>((props, ref) => {
-  return <canvas className={styles.pdfPageCanvas} ref={ref} {...props} />;
+export const PDFPageCanvas = forwardRef<
+  HTMLCanvasElement,
+  { style?: CSSProperties }
+>(({ style, ...props }, ref) => {
+  return (
+    <canvas
+      className={styles.pdfPageCanvas}
+      ref={ref}
+      style={style}
+      {...props}
+    />
+  );
 });
 
 PDFPageCanvas.displayName = 'pdf-page-canvas';

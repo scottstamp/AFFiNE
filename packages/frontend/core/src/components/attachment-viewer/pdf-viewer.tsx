@@ -1,5 +1,5 @@
+import { Loading } from '@affine/component';
 import { type PDF, PDFService, PDFStatus } from '@affine/core/modules/pdf';
-import { LoadingSvg } from '@affine/core/modules/pdf/views';
 import type { AttachmentBlockModel } from '@blocksuite/affine/blocks';
 import { useLiveData, useService } from '@toeverything/infra';
 import { useEffect, useState } from 'react';
@@ -10,7 +10,7 @@ function PDFViewerStatus({ pdf, ...props }: PDFViewerProps & { pdf: PDF }) {
   const state = useLiveData(pdf.state$);
 
   if (state?.status !== PDFStatus.Opened) {
-    return <LoadingSvg />;
+    return <PDFLoading />;
   }
 
   return <PDFViewerInner {...props} pdf={pdf} state={state} />;
@@ -31,12 +31,20 @@ export function PDFViewer({ model, ...props }: PDFViewerProps) {
     const { pdf, release } = pdfService.get(model);
     setPdf(pdf);
 
-    return release;
+    return () => {
+      release();
+    };
   }, [model, pdfService, setPdf]);
 
   if (!pdf) {
-    return <LoadingSvg />;
+    return <PDFLoading />;
   }
 
   return <PDFViewerStatus {...props} model={model} pdf={pdf} />;
 }
+
+const PDFLoading = () => (
+  <div style={{ margin: 'auto' }}>
+    <Loading />
+  </div>
+);

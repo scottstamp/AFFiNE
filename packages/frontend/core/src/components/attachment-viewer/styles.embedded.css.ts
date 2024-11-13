@@ -11,6 +11,11 @@ export const pdfContainer = style({
   background: cssVar('--affine-background-primary-color'),
   userSelect: 'none',
   contentVisibility: 'visible',
+  display: 'flex',
+  minHeight: 'fit-content',
+  height: '100%',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
 });
 
 export const pdfViewer = style({
@@ -21,6 +26,7 @@ export const pdfViewer = style({
   padding: '12px',
   overflow: 'hidden',
   background: cssVarV2('layer/background/secondary'),
+  flex: 1,
 });
 
 export const pdfPlaceholder = style({

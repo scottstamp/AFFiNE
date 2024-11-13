@@ -128,6 +128,9 @@ export const pdfPage = style({
     '0px 4px 20px 0px var(--transparent-black-200, rgba(0, 0, 0, 0.10))',
   overflow: 'hidden',
   maxHeight: 'max-content',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
 });
 
 export const pdfThumbnails = style({

@@ -25,7 +25,7 @@ import {
 } from 'react-virtuoso';
 
 import * as styles from './styles.css';
-import { calculatePageNum } from './utils';
+import { calculatePageNum, fitToPage } from './utils';
 
 const THUMBNAIL_WIDTH = 94;
 
@@ -81,17 +81,27 @@ export const PDFViewerInner = ({ pdf, state }: PDFViewerInnerProps) => {
     (
       index: number,
       _: unknown,
-      { width, height, onPageSelect, pageClassName }: PDFVirtuosoContext
+      {
+        viewportInfo,
+        meta,
+        onPageSelect,
+        pageClassName,
+        resize,
+        isThumbnail,
+      }: PDFVirtuosoContext
     ) => {
       return (
         <PDFPageRenderer
-          key={index}
+          key={`${pageClassName}-${index}`}
           pdf={pdf}
-          width={width}
-          height={height}
           pageNum={index}
-          onSelect={onPageSelect}
           className={pageClassName}
+          viewportInfo={viewportInfo}
+          actualSize={meta.pageSizes[index]}
+          maxSize={meta.maxSize}
+          onSelect={onPageSelect}
+          resize={resize}
+          isThumbnail={isThumbnail}
         />
       );
     },
@@ -100,22 +110,47 @@ export const PDFViewerInner = ({ pdf, state }: PDFViewerInnerProps) => {
 
   const thumbnailsConfig = useMemo(() => {
     const { height: vh } = viewportInfo;
-    const { pageCount: t, height: h, width: w } = state.meta;
-    const p = h / (w || 1);
-    const pw = THUMBNAIL_WIDTH;
-    const ph = Math.ceil(pw * p);
-    const height = Math.min(vh - 60 - 24 - 24 - 2 - 8, t * ph + (t - 1) * 12);
+    const { pageCount, pageSizes, maxSize } = state.meta;
+    const t = Math.min(maxSize.width / maxSize.height, 1);
+    const pw = THUMBNAIL_WIDTH / t;
+    const newMaxSize = {
+      width: pw,
+      height: pw * (maxSize.height / maxSize.width),
+    };
+    const newPageSizes = pageSizes.map(({ width, height }) => {
+      const w = newMaxSize.width * (width / maxSize.width);
+      return {
+        width: w,
+        height: w * (height / width),
+      };
+    });
+    const height = Math.min(
+      vh - 60 - 24 - 24 - 2 - 8,
+      newPageSizes.reduce((h, { height }) => h + height * t, 0) +
+        (pageCount - 1) * 12
+    );
     return {
       context: {
-        width: pw,
-        height: ph,
         onPageSelect,
+        viewportInfo: {
+          width: pw,
+          height,
+        },
+        meta: {
+          pageCount,
+          maxSize: newMaxSize,
+          pageSizes: newPageSizes,
+        },
+        resize: fitToPage,
+        isThumbnail: true,
         pageClassName: styles.pdfThumbnail,
       },
       style: { height },
     };
   }, [state, viewportInfo, onPageSelect]);
 
+  // 1. works fine if they are the same size
+  // 2. uses the `observeIntersection` when targeting different sizes
   const scrollSeekConfig = useMemo<ScrollSeekConfiguration>(() => {
     return {
       enter: velocity => Math.abs(velocity) > 1024,
@@ -154,8 +189,12 @@ export const PDFViewerInner = ({ pdf, state }: PDFViewerInnerProps) => {
           ScrollSeekPlaceholder,
         }}
         context={{
-          width: state.meta.width,
-          height: state.meta.height,
+          viewportInfo: {
+            width: viewportInfo.width - 40,
+            height: viewportInfo.height - 40,
+          },
+          meta: state.meta,
+          resize: fitToPage,
           pageClassName: styles.pdfPage,
         }}
         scrollSeekConfiguration={scrollSeekConfig}
@@ -174,9 +213,9 @@ export const PDFViewerInner = ({ pdf, state }: PDFViewerInnerProps) => {
               Scroller,
               ScrollSeekPlaceholder,
             }}
-            scrollSeekConfiguration={scrollSeekConfig}
             style={thumbnailsConfig.style}
             context={thumbnailsConfig.context}
+            scrollSeekConfiguration={scrollSeekConfig}
           />
         </div>
         <div className={clsx(['indicator', styles.pdfIndicator])}>

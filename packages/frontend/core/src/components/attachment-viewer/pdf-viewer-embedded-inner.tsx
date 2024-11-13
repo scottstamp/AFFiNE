@@ -5,6 +5,8 @@ import {
   PDFService,
   PDFStatus,
 } from '@affine/core/modules/pdf';
+import type { PDFMeta } from '@affine/core/modules/pdf/renderer';
+import type { PageSize } from '@affine/core/modules/pdf/renderer/types';
 import { LoadingSvg, PDFPageCanvas } from '@affine/core/modules/pdf/views';
 import { PeekViewService } from '@affine/core/modules/peek-view';
 import { stopPropagation } from '@affine/core/utils';
@@ -30,9 +32,18 @@ import type { PDFViewerProps } from './pdf-viewer';
 import * as styles from './styles.css';
 import * as embeddedStyles from './styles.embedded.css';
 
+function defaultMeta() {
+  return {
+    pageCount: 0,
+    pageSizes: [],
+    maxSize: { width: 0, height: 0 },
+  };
+}
+
 type PDFViewerEmbeddedInnerProps = PDFViewerProps;
 
 export function PDFViewerEmbeddedInner({ model }: PDFViewerEmbeddedInnerProps) {
+  const scale = window.devicePixelRatio;
   const peekView = useService(PeekViewService).peekView;
   const pdfService = useService(PDFService);
   const [pdfEntity, setPdfEntity] = useState<{
@@ -43,28 +54,25 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerEmbeddedInnerProps) {
     page: PDFPage;
     release: () => void;
   } | null>(null);
+  const [pageSize, setPageSize] = useState<PageSize | null>(null);
 
   const meta = useLiveData(
     useMemo(() => {
       return pdfEntity
         ? pdfEntity.pdf.state$.map(s => {
-            return s.status === PDFStatus.Opened
-              ? s.meta
-              : { pageCount: 0, width: 0, height: 0 };
+            return s.status === PDFStatus.Opened ? s.meta : defaultMeta();
           })
-        : new LiveData({ pageCount: 0, width: 0, height: 0 });
+        : new LiveData<PDFMeta>(defaultMeta());
     }, [pdfEntity])
   );
   const img = useLiveData(
-    useMemo(() => {
-      return pageEntity ? pageEntity.page.bitmap$ : null;
-    }, [pageEntity])
+    useMemo(() => (pageEntity ? pageEntity.page.bitmap$ : null), [pageEntity])
   );
 
-  const [isLoading, setIsLoading] = useState(true);
   const [cursor, setCursor] = useState(0);
-  const viewerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [visibility, setVisibility] = useState(false);
+  const viewerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const peek = useCallback(() => {
@@ -107,47 +115,51 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerEmbeddedInnerProps) {
     if (!img) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const { width, height } = meta;
-    if (width * height === 0) return;
 
     setIsLoading(false);
 
-    canvas.width = width * 2;
-    canvas.height = height * 2;
+    canvas.width = img.width;
+    canvas.height = img.height;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(img, 0, 0);
-  }, [img, meta]);
+  }, [img]);
 
   useEffect(() => {
     if (!visibility) return;
     if (!pageEntity) return;
+    if (!pageSize) return;
 
-    const { width, height } = meta;
-    if (width * height === 0) return;
+    const { width, height } = pageSize;
 
-    pageEntity.page.render({ width, height, scale: 2 });
+    pageEntity.page.render({ width, height, scale });
 
     return () => {
       pageEntity.page.render.unsubscribe();
     };
-  }, [visibility, pageEntity, meta]);
+  }, [visibility, pageEntity, pageSize, scale]);
 
   useEffect(() => {
     if (!visibility) return;
     if (!pdfEntity) return;
 
-    const { width, height } = meta;
-    if (width * height === 0) return;
+    const size = meta.pageSizes[cursor];
+    if (!size) return;
 
-    const pageEntity = pdfEntity.pdf.page(cursor, `${width}:${height}:2`);
+    const { width, height } = size;
+    const pageEntity = pdfEntity.pdf.page(
+      cursor,
+      `${width}:${height}:${scale}`
+    );
 
     setPageEntity(pageEntity);
+    setPageSize(size);
 
     return () => {
       pageEntity.release();
+      setPageSize(null);
       setPageEntity(null);
     };
-  }, [visibility, pdfEntity, cursor, meta]);
+  }, [visibility, pdfEntity, cursor, meta, scale]);
 
   useEffect(() => {
     if (!visibility) return;
@@ -191,7 +203,7 @@ export function PDFViewerEmbeddedInner({ model }: PDFViewerEmbeddedInnerProps) {
             justifyContent: 'center',
             alignItems: 'center',
             width: '100%',
-            minHeight: '759px',
+            minHeight: '253px',
           }}
         >
           <PDFPageCanvas ref={canvasRef} />

@@ -1,16 +1,23 @@
-export type PDFMeta = {
-  pageCount: number;
+export type PageSize = {
   width: number;
   height: number;
+};
+
+export type PDFMeta = {
+  pageCount: number;
+  maxSize: PageSize;
+  pageSizes: PageSize[];
+};
+
+export type PageSizeOpts = {
+  pageNum: number;
 };
 
 export type RenderPageOpts = {
   pageNum: number;
-  width: number;
-  height: number;
   scale?: number;
-};
+} & PageSize;
 
-export type RenderedPage = RenderPageOpts & {
+export type RenderedPage = {
   bitmap: ImageBitmap;
 };

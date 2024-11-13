@@ -6,7 +6,7 @@ import {
   LiveData,
   mapInto,
 } from '@toeverything/infra';
-import { map, switchMap } from 'rxjs';
+import { filter, map, switchMap } from 'rxjs';
 
 import type { RenderPageOpts } from '../renderer';
 import type { PDF } from './pdf';
@@ -25,7 +25,8 @@ export class PDFPage extends Entity<{ pdf: PDF; pageNum: number }> {
         pageNum: this.pageNum,
       })
     ),
-    map(data => data.bitmap),
+    map(data => data?.bitmap),
+    filter(Boolean),
     mapInto(this.bitmap$),
     catchErrorInto(this.error$, error => {
       logger.error('Failed to render page', error);
