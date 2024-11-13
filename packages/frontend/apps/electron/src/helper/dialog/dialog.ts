@@ -2,9 +2,9 @@ import { ValidationResult } from '@affine/native';
 import fs from 'fs-extra';
 import { nanoid } from 'nanoid';
 
-import { ensureSQLiteDB } from '../db/ensure-db';
 import { logger } from '../logger';
 import { mainRPC } from '../main-rpc';
+import { ensureSQLiteDB } from '../nbstore/v1/ensure-db';
 import { storeWorkspaceMeta } from '../workspace';
 import { getWorkspaceDBPath, getWorkspacesBasePath } from '../workspace/meta';
 

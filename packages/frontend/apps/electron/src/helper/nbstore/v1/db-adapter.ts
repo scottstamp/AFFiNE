@@ -2,7 +2,7 @@ import type { InsertRow } from '@affine/native';
 import { SqliteConnection } from '@affine/native';
 import type { ByteKVBehavior } from '@toeverything/infra/storage';
 
-import { logger } from '../logger';
+import { logger } from '../../logger';
 
 /**
  * A base class for SQLite DB adapter that provides basic methods around updates & blobs

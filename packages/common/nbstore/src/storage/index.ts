@@ -2,6 +2,11 @@ import EventEmitter2 from 'eventemitter2';
 
 import type { ConnectionStatus } from '../connection';
 import { type Storage, type StorageType } from '../storage';
+import type { BlobStorage } from './blob';
+import type { DocStorage } from './doc';
+import type { SyncStorage } from './sync';
+
+type Storages = DocStorage | BlobStorage | SyncStorage;
 
 export class SpaceStorage {
   protected readonly storages: Map<StorageType, Storage> = new Map();
@@ -18,14 +23,14 @@ export class SpaceStorage {
     return this.storages.get(type);
   }
 
-  get(type: StorageType) {
+  get<T extends StorageType>(type: T): Extract<Storages, { storageType: T }> {
     const storage = this.tryGet(type);
 
     if (!storage) {
       throw new Error(`Storage ${type} not registered.`);
     }
 
-    return storage;
+    return storage as Extract<Storages, { storageType: T }>;
   }
 
   async connect() {

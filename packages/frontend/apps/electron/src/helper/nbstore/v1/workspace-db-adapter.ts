@@ -1,12 +1,12 @@
+import type { SpaceType } from '@affine/nbstore';
 import { AsyncLock } from '@toeverything/infra/utils';
 import { Subject } from 'rxjs';
 import { applyUpdate, Doc as YDoc } from 'yjs';
 
-import { logger } from '../logger';
-import { getWorkspaceMeta } from '../workspace/meta';
+import { logger } from '../../logger';
+import { getWorkspaceMeta } from '../../workspace/meta';
 import { SQLiteAdapter } from './db-adapter';
 import { mergeUpdate } from './merge-update';
-import type { SpaceType } from './types';
 
 const TRIM_SIZE = 1;
 

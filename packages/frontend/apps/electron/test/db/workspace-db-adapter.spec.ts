@@ -26,7 +26,7 @@ afterAll(() => {
 
 test('can create new db file if not exists', async () => {
   const { openWorkspaceDatabase } = await import(
-    '@affine/electron/helper/db/workspace-db-adapter'
+    '@affine/electron/helper/nbstore/v1/workspace-db-adapter'
   );
   const workspaceId = v4();
   const db = await openWorkspaceDatabase('workspace', workspaceId);
@@ -41,7 +41,7 @@ test('can create new db file if not exists', async () => {
 
 test('on destroy, check if resources have been released', async () => {
   const { openWorkspaceDatabase } = await import(
-    '@affine/electron/helper/db/workspace-db-adapter'
+    '@affine/electron/helper/nbstore/v1/workspace-db-adapter'
   );
   const workspaceId = v4();
   const db = await openWorkspaceDatabase('workspace', workspaceId);

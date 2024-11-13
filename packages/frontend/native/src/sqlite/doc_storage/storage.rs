@@ -1,0 +1,106 @@
+use affine_schema::get_migrator;
+use sqlx::{
+  migrate::MigrateDatabase,
+  sqlite::{Sqlite, SqliteConnectOptions, SqlitePoolOptions},
+  Pool,
+};
+
+pub type Result<T> = std::result::Result<T, sqlx::Error>;
+
+pub struct SqliteDocStorage {
+  pub pool: Pool<Sqlite>,
+  path: String,
+}
+
+impl SqliteDocStorage {
+  pub fn new(path: String) -> Self {
+    let sqlite_options = SqliteConnectOptions::new()
+      .filename(&path)
+      .foreign_keys(false)
+      .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal);
+
+    let mut pool_options = SqlitePoolOptions::new();
+
+    if cfg!(test) && path == ":memory:" {
+      pool_options = pool_options
+        .min_connections(1)
+        .max_connections(1)
+        .idle_timeout(None)
+        .max_lifetime(None);
+    } else {
+      pool_options = pool_options.max_connections(4);
+    }
+
+    Self {
+      pool: pool_options.connect_lazy_with(sqlite_options),
+      path,
+    }
+  }
+
+  pub async fn connect(&self) -> Result<()> {
+    if !Sqlite::database_exists(&self.path).await.unwrap_or(false) {
+      Sqlite::create_database(&self.path).await?;
+    };
+
+    self.migrate().await?;
+
+    Ok(())
+  }
+
+  async fn migrate(&self) -> Result<()> {
+    let migrator = get_migrator();
+    migrator.run(&self.pool).await?;
+
+    Ok(())
+  }
+
+  pub async fn close(&self) {
+    self.pool.close().await
+  }
+
+  pub fn is_closed(&self) -> bool {
+    self.pool.is_closed()
+  }
+
+  ///
+  /// Flush the WAL file to the database file.
+  /// See https://www.sqlite.org/pragma.html#pragma_wal_checkpoint:~:text=PRAGMA%20schema.wal_checkpoint%3B
+  ///
+  pub async fn checkpoint(&self) -> Result<()> {
+    sqlx::query("PRAGMA wal_checkpoint(FULL);")
+      .execute(&self.pool)
+      .await?;
+
+    Ok(())
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  async fn get_storage() -> SqliteDocStorage {
+    let storage = SqliteDocStorage::new(":memory:".to_string());
+    storage.connect().await.unwrap();
+
+    storage
+  }
+
+  #[tokio::test]
+  async fn init_tables() {
+    let storage = get_storage().await;
+
+    sqlx::query("INSERT INTO v2_meta (space_id) VALUES ($1);")
+      .bind("test")
+      .execute(&storage.pool)
+      .await
+      .unwrap();
+
+    let record = sqlx::query!("SELECT space_id FROM v2_meta;")
+      .fetch_one(&storage.pool)
+      .await
+      .unwrap();
+
+    assert_eq!(record.space_id, "test");
+  }
+}

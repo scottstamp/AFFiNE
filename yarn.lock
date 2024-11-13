@@ -509,6 +509,7 @@ __metadata:
     "@affine/core": "workspace:*"
     "@affine/i18n": "workspace:*"
     "@affine/native": "workspace:*"
+    "@affine/nbstore": "workspace:*"
     "@blocksuite/affine": "npm:0.18.0"
     "@electron-forge/cli": "npm:^7.3.0"
     "@electron-forge/core": "npm:^7.3.0"
@@ -714,10 +715,11 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@affine/nbstore@workspace:packages/common/nbstore":
+"@affine/nbstore@workspace:*, @affine/nbstore@workspace:packages/common/nbstore":
   version: 0.0.0-use.local
   resolution: "@affine/nbstore@workspace:packages/common/nbstore"
   dependencies:
+    "@affine/electron-api": "workspace:*"
     "@affine/graphql": "workspace:*"
     "@toeverything/infra": "workspace:*"
     eventemitter2: "npm:^6.4.9"
@@ -725,8 +727,10 @@ __metadata:
     lodash-es: "npm:^4.17.21"
     rxjs: "npm:^7.8.1"
     socket.io-client: "npm:^4.7.5"
+    vitest: "npm:2.1.4"
     yjs: "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
   peerDependencies:
+    "@affine/electron-api": "workspace:*"
     "@affine/graphql": "workspace:*"
     idb: ^8.0.0
     socket.io-client: ^4.7.5

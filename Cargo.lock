@@ -55,6 +55,9 @@ dependencies = [
 [[package]]
 name = "affine_schema"
 version = "0.0.0"
+dependencies = [
+ "sqlx",
+]
 
 [[package]]
 name = "affine_server_native"

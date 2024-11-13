@@ -9,7 +9,9 @@
     "./op": "./src/op/index.ts",
     "./idb": "./src/impls/idb/index.ts",
     "./idb/v1": "./src/impls/idb/v1/index.ts",
-    "./cloud": "./src/impls/cloud/index.ts"
+    "./cloud": "./src/impls/cloud/index.ts",
+    "./sqlite": "./src/impls/sqlite/index.ts",
+    "./sqlite/v1": "./src/impls/sqlite/v1/index.ts"
   },
   "dependencies": {
     "@toeverything/infra": "workspace:*",
@@ -19,11 +21,14 @@
     "yjs": "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
   },
   "devDependencies": {
+    "@affine/electron-api": "workspace:*",
     "@affine/graphql": "workspace:*",
     "idb": "^8.0.0",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "vitest": "2.1.4"
   },
   "peerDependencies": {
+    "@affine/electron-api": "workspace:*",
     "@affine/graphql": "workspace:*",
     "idb": "^8.0.0",
     "socket.io-client": "^4.7.5"

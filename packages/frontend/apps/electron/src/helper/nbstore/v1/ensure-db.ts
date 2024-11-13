@@ -1,5 +1,6 @@
-import { logger } from '../logger';
-import type { SpaceType } from './types';
+import type { SpaceType } from '@affine/nbstore';
+
+import { logger } from '../../logger';
 import type { WorkspaceSQLiteDB } from './workspace-db-adapter';
 import { openWorkspaceDatabase } from './workspace-db-adapter';
 

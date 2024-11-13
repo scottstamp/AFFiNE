@@ -54,7 +54,7 @@ afterAll(() => {
 
 test('can get a valid WorkspaceSQLiteDB', async () => {
   const { ensureSQLiteDB } = await import(
-    '@affine/electron/helper/db/ensure-db'
+    '@affine/electron/helper/nbstore/v1/ensure-db'
   );
   const workspaceId = v4();
   const db0 = await ensureSQLiteDB('workspace', workspaceId);
@@ -71,7 +71,7 @@ test('can get a valid WorkspaceSQLiteDB', async () => {
 
 test('db should be destroyed when app quits', async () => {
   const { ensureSQLiteDB } = await import(
-    '@affine/electron/helper/db/ensure-db'
+    '@affine/electron/helper/nbstore/v1/ensure-db'
   );
   const workspaceId = v4();
   const db0 = await ensureSQLiteDB('workspace', workspaceId);
@@ -91,7 +91,7 @@ test('db should be destroyed when app quits', async () => {
 
 test('db should be removed in db$Map after destroyed', async () => {
   const { ensureSQLiteDB, db$Map } = await import(
-    '@affine/electron/helper/db/ensure-db'
+    '@affine/electron/helper/nbstore/v1/ensure-db'
   );
   const workspaceId = v4();
   const db = await ensureSQLiteDB('workspace', workspaceId);

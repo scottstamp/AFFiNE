@@ -1,9 +1,9 @@
 import path from 'node:path';
 
+import type { SpaceType } from '@affine/nbstore';
 import fs from 'fs-extra';
 
 import { isWindows } from '../../shared/utils';
-import type { SpaceType } from '../db/types';
 import { logger } from '../logger';
 import { mainRPC } from '../main-rpc';
 import type { WorkspaceMeta } from '../type';

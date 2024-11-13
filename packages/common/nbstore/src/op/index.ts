@@ -3,6 +3,8 @@ import { OpClient } from '@toeverything/infra/op';
 import type { Storage } from '../storage';
 import type { SpaceStorageOps } from './ops';
 
+export { SpaceStorageConsumer } from './consumer';
+
 export class SpaceStorageClient extends OpClient<SpaceStorageOps> {
   /**
    * Adding a storage implementation to the backend.

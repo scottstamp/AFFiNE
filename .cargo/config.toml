@@ -2,3 +2,6 @@
 rustflags = ["-C", "target-feature=+crt-static"]
 [target.aarch64-pc-windows-msvc]
 rustflags = ["-C", "target-feature=+crt-static"]
+
+[target.'cfg(target_os = "linux")']
+rustflags = ["-C", "link-args=-Wl,--warn-unresolved-symbols"]

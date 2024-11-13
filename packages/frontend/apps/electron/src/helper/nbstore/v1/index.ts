@@ -1,7 +1,8 @@
-import { mainRPC } from '../main-rpc';
-import type { MainEventRegister } from '../type';
+import type { SpaceType } from '@affine/nbstore';
+
+import { mainRPC } from '../../main-rpc';
+import type { MainEventRegister } from '../../type';
 import { ensureSQLiteDB } from './ensure-db';
-import type { SpaceType } from './types';
 
 export * from './ensure-db';
 

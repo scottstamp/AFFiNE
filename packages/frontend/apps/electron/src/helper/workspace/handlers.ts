@@ -2,8 +2,8 @@ import path from 'node:path';
 
 import fs from 'fs-extra';
 
-import { ensureSQLiteDB } from '../db/ensure-db';
 import { logger } from '../logger';
+import { ensureSQLiteDB } from '../nbstore/v1/ensure-db';
 import type { WorkspaceMeta } from '../type';
 import {
   getDeletedWorkspacesBasePath,
