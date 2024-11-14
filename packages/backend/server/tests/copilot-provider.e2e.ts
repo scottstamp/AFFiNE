@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
-import { createWorkspace } from '@affine/server/tests/utils';
+import { createRandomAIUser } from '@affine-test/kit/utils/cloud';
+import type { ExecutionContext, TestFn } from 'ava';
+import ava from 'ava';
+
+import { createWorkspace } from './utils';
 import {
   chatWithImages,
   chatWithText,
@@ -10,10 +14,7 @@ import {
   ProviderActionTestCase,
   ProviderWorkflowTestCase,
   sse2array,
-} from '@affine/server/tests/utils/copilot';
-import { createRandomAIUser } from '@affine-test/kit/utils/cloud';
-import type { ExecutionContext, TestFn } from 'ava';
-import ava from 'ava';
+} from './utils/copilot';
 
 type Tester = {
   app: any;
@@ -50,7 +51,7 @@ export const runPrisma = async <T>(
   cb: (
     prisma: InstanceType<
       // eslint-disable-next-line @typescript-eslint/consistent-type-imports
-      typeof import('../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
+      typeof import('../../../../packages/backend/server/node_modules/@prisma/client').PrismaClient
     >
   ) => Promise<T>
 ): Promise<T> => {
@@ -58,7 +59,7 @@ export const runPrisma = async <T>(
     PrismaClient,
     // eslint-disable-next-line @typescript-eslint/no-var-requires
   } = await import(
-    '../../../packages/backend/server/node_modules/@prisma/client'
+    '../../../../packages/backend/server/node_modules/@prisma/client'
   );
   const client = new PrismaClient();
   await client.$connect();

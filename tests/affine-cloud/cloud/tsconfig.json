@@ -1,5 +1,5 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "esModuleInterop": true,
     "outDir": "lib"
@@ -7,10 +7,10 @@
   "include": ["e2e"],
   "references": [
     {
-      "path": "../../tests/kit"
+      "path": "../../../tests/kit"
     },
     {
-      "path": "../../tests/fixtures"
+      "path": "../../../tests/fixtures"
     }
   ]
 }

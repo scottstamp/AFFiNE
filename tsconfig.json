@@ -159,7 +159,10 @@
       "path": "./tests/affine-legacy/0.8.0-canary.7"
     },
     {
-      "path": "./tests/affine-cloud"
+      "path": "./tests/affine-cloud/cloud"
+    },
+    {
+      "path": "./tests/affine-cloud/copilot"
     },
     {
       "path": "./tests/affine-desktop"
