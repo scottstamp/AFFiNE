@@ -88,6 +88,7 @@ test.before(async t => {
 });
 
 test.after(async t => {
+  if (!isCopilotConfigured) return;
   await runPrisma(async client => {
     await client.user.delete({
       where: {

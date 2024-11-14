@@ -12,6 +12,7 @@
     "docs/reference",
     "tools/@types/*",
     "tests/*",
+    "tests/affine-cloud/*",
     "tests/affine-legacy/*"
   ],
   "engines": {
