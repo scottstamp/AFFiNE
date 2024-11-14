@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "graphql.fullname" . }}-copilot-test
+  labels:
+    {{- include "graphql.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": before-hook-creation
+spec:
+  schedule: "0 8 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: {{ include "graphql.serviceAccountName" . }}
+          containers:
+          - name: {{ .Chart.Name }}
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            command: ["yarn", "test:copilot:e2e"]
+            env:
+              - name: COPILOT_E2E_ENDPOINT
+                value: "{{ include "graphql.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+              - name: DATABASE_PASSWORD
+                valueFrom:
+                  secretKeyRef:
+                    name: pg-postgresql
+                    key: postgres-password
+            resources:
+              requests:
+                cpu: '100m'
+                memory: '200Mi'
+          restartPolicy: Never
+  backoffLimit: 1
