@@ -66,4 +66,3 @@ export declare enum ValidationResult {
 }
 
 export declare function verifyChallengeResponse(response: string, bits: number, resource: string): Promise<boolean>
-
