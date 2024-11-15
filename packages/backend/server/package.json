@@ -12,11 +12,12 @@
     "start": "node --loader ts-node/esm/transpile-only.mjs ./src/index.ts",
     "dev": "nodemon ./src/index.ts",
     "test": "ava --concurrency 1 --serial",
-    "test:copilot:e2e": "ava \"e2e/copilot.e2e.ts\"",
+    "test:copilot:e2e": "ava \"tests/**/copilot-*.e2e.ts\"",
     "test:copilot:spec": "ava \"tests/**/copilot-*.spec.ts\"",
     "test:coverage": "c8 ava --concurrency 1 --serial",
-    "test:copilot:e2e:coverage": "c8 ava --timeout=5m \"e2e/copilot.e2e.ts\"",
+    "test:copilot:e2e:coverage": "c8 ava --timeout=5m \"tests/**/copilot-*.e2e.ts\"",
     "test:copilot:spec:coverage": "c8 ava --timeout=5m \"tests/**/copilot-*.spec.ts\"",
+    "test:copilot:e2e:cron": "ava --config \"tests/ava.docker.config.js\" \"tests/**/copilot-*.e2e.ts\"",
     "postinstall": "prisma generate",
     "data-migration": "node --loader ts-node/esm/transpile-only.mjs ./src/data/index.ts",
     "predeploy": "yarn prisma migrate deploy && node --import ./scripts/register.js ./dist/data/index.js run",
@@ -89,6 +90,7 @@
     "ses": "^1.4.1",
     "socket.io": "^4.7.5",
     "stripe": "^17.0.0",
+    "supertest": "^7.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3",
     "yjs": "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch",
@@ -112,8 +114,7 @@
     "@types/supertest": "^6.0.2",
     "c8": "^10.0.0",
     "nodemon": "^3.1.0",
-    "sinon": "^19.0.0",
-    "supertest": "^7.0.0"
+    "sinon": "^19.0.0"
   },
   "ava": {
     "timeout": "1m",

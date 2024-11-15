@@ -1,3 +1,4 @@
+{{ if .Values.app.copilot.enabled }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -18,18 +19,36 @@ spec:
           containers:
           - name: {{ .Chart.Name }}
             image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-            command: ["yarn", "test:copilot:e2e"]
+            command: ["yarn", "test:copilot:e2e:cron"]
             env:
               - name: COPILOT_E2E_ENDPOINT
-                value: "{{ include "graphql.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
+                value: "http://{{ include "graphql.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:3000"
               - name: DATABASE_PASSWORD
                 valueFrom:
                   secretKeyRef:
                     name: pg-postgresql
                     key: postgres-password
+              - name: DATABASE_URL
+                value: postgres://{{ .Values.global.database.user }}:$(DATABASE_PASSWORD)@{{ .Values.global.database.url }}:{{ .Values.global.database.port }}/{{ .Values.global.database.name }}
+              - name: COPILOT_OPENAI_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: "{{ .Values.app.copilot.secretName }}"
+                    key: openaiSecret
+              - name: COPILOT_FAL_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: "{{ .Values.app.copilot.secretName }}"
+                    key: falSecret
+              - name: COPILOT_UNSPLASH_API_KEY
+                valueFrom:
+                  secretKeyRef:
+                    name: "{{ .Values.app.copilot.secretName }}"
+                    key: unsplashSecret
             resources:
               requests:
                 cpu: '100m'
                 memory: '200Mi'
           restartPolicy: Never
-    backoffLimit: 1
+      backoffLimit: 1
+{{ end }}

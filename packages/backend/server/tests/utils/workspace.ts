@@ -2,14 +2,14 @@ import type { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 
 import type { WorkspaceType } from '../../src/core/workspaces';
-import { gql } from './common';
+import { gqlEndpoint } from './common';
 
 export async function createWorkspace(
   app: INestApplication,
   token: string
 ): Promise<WorkspaceType> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .field(
@@ -36,7 +36,7 @@ export async function getWorkspacePublicPages(
   workspaceId: string
 ) {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({
@@ -63,7 +63,7 @@ export async function getWorkspace(
   take = 8
 ): Promise<WorkspaceType> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({
@@ -86,7 +86,7 @@ export async function updateWorkspace(
   isPublic: boolean
 ): Promise<boolean> {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({
@@ -109,7 +109,7 @@ export async function publishPage(
   pageId: string
 ) {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({
@@ -133,7 +133,7 @@ export async function revokePublicPage(
   pageId: string
 ) {
   const res = await request(app.getHttpServer())
-    .post(gql)
+    .post(gqlEndpoint)
     .auth(token, { type: 'bearer' })
     .set({ 'x-request-id': 'test', 'x-operation-name': 'test' })
     .send({

@@ -5,7 +5,6 @@ import type { ExecutionContext, TestFn } from 'ava';
 import ava from 'ava';
 import { z } from 'zod';
 
-import { createWorkspace } from './utils';
 import {
   chatWithImages,
   chatWithText,
@@ -16,6 +15,7 @@ import {
   ProviderWorkflowTestCase,
   sse2array,
 } from './utils/copilot';
+import { createWorkspace } from './utils/workspace';
 
 type Tester = {
   app: any;
