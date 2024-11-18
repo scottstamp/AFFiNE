@@ -22,12 +22,22 @@ async function runTest() {
     );
 
     const parser = new Parser();
-    test.stdout.pipe(parser);
+    test.stdout.on('data', data => {
+      console.log(data.toString());
+      parser.write(data);
+    });
 
     test.on('close', _ => {
       const failures = parser?.failures.filter(f => !!f.fullname);
+      const timeouts = parser?.failures.filter(f => !f.fullname);
+      const result = [
+        `${parser.results.pass} passed`,
+        `${parser.results.fail - timeouts.length} failed`,
+        `${timeouts.length} timeouts`,
+        `${parser.results.skip} skipped`,
+      ];
       const report = [
-        `Test finished with ${parser.results.pass} passed, ${parser.results.fail} failed, ${parser.results.skip} skipped.`,
+        `Test finished with ${result.join(', ')}.`,
         failures?.length > 0
           ? `Failed tests: \n\n${failures.map(failure => `- ${failure.fullname}`).join('\n')}`
           : '',
