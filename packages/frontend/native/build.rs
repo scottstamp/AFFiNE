@@ -14,6 +14,7 @@ async fn main() -> Result<(), std::io::Error> {
     fs::remove_file(db_path)?;
   }
 
+  #[cfg(not(feature = "noop"))]
   napi_build::setup();
   let options = SqliteConnectOptions::new()
     .filename(db_path)

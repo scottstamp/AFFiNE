@@ -1,0 +1,19 @@
+[package]
+edition = "2021"
+name    = "affine_mobile_native"
+version = "0.0.0"
+
+[lib]
+crate-type = ["cdylib", "staticlib"]
+
+[[bin]]
+# This can be whatever name makes sense for your project, but the rest of this tutorial assumes uniffi-bindgen.
+name = "uniffi-bindgen"
+path = "uniffi-bindgen.rs"
+
+[dependencies]
+affine_common = { workspace = true }
+uniffi = { version = "0.28", features = ["cli"] }
+
+[build-dependencies]
+uniffi = { version = "0.28", features = ["build"] }

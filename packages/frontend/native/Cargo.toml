@@ -4,13 +4,21 @@ name    = "affine_native"
 version = "0.0.0"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["rlib", "cdylib"]
+
+[features]
+noop = ["napi/noop", "napi-derive/noop"]
+
+[[bench]]
+name    = "hashcash"
+harness = false
 
 [dependencies]
 affine_common = { workspace = true }
 affine_schema = { path = "./schema" }
 anyhow        = { workspace = true }
 chrono        = { workspace = true }
+criterion2    = { workspace = true }
 napi          = { workspace = true }
 napi-derive   = { workspace = true }
 notify        = { workspace = true, features = ["serde"] }

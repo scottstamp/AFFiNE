@@ -1,7 +1,12 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply from: 'capacitor.build.gradle'
 
 android {
-    namespace "app.affine.pro"
+  namespace "app.affine.pro"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "app.affine.pro"
@@ -22,6 +27,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
+    ndkVersion "28.0.12433566"
+
+    compileOptions {
+      sourceCompatibility JavaVersion.VERSION_17
+      targetCompatibility JavaVersion.VERSION_17
+    }
 }
 
 repositories {
@@ -40,15 +52,56 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    implementation "net.java.dev.jna:jna:5.15.0@aar"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0"
+    implementation 'androidx.core:core-ktx:1.15.0'
 }
-
-apply from: 'capacitor.build.gradle'
 
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
         apply plugin: 'com.google.gms.google-services'
     }
-} catch(Exception e) {
+} catch(Exception ignored) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+apply plugin: 'org.mozilla.rust-android-gradle.rust-android'
+
+cargo {
+  module  = "../../../../mobile-native"       // Or whatever directory contains your Cargo.toml
+  libname = "affine_mobile_native"          // Or whatever matches Cargo.toml's [package] name.
+  targets = ["arm64"]
+  pythonCommand = "python3.12"
+  targetDirectory = "../../../../../../target"
+  extraCargoBuildArguments = ["--lib"]
+}
+
+kotlin {
+  compilerOptions {
+    apiVersion = KotlinVersion.KOTLIN_2_0
+    jvmTarget = JvmTarget.JVM_17
+  }
+}
+
+afterEvaluate {
+    // The `cargoBuild` task isn't available until after evaluation.
+    android.applicationVariants.configureEach { variant ->
+        def productFlavor = ""
+        variant.productFlavors.each {
+            productFlavor += "${it.name.capitalize()}"
+        }
+        def buildType = "${variant.buildType.name.capitalize()}"
+        tasks["generate${productFlavor}${buildType}Assets"].dependsOn(tasks["cargoBuild"])
+    }
+}
+
+android.applicationVariants.configureEach { variant ->
+    def t = tasks.register("generate${variant.name.capitalize()}UniFFIBindings", Exec) {
+        workingDir "${project.projectDir}"
+        // Runs the bindings generation, note that you must have uniffi-bindgen installed and in your PATH environment variable
+        commandLine 'cargo', 'run', '--bin', 'uniffi-bindgen', 'generate', '--library', "${buildDir}/rustJniLibs/android/arm64-v8a/libaffine_mobile_native.so", '--language', 'kotlin', '--out-dir', "${project.projectDir}/src/main/java"
+        dependsOn("cargoBuild")
+    }
+    variant.javaCompileProvider.get().dependsOn(t)
 }

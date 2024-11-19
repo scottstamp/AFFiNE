@@ -2,17 +2,26 @@
 
 buildscript {
 
-    repositories {
+  repositories {
         google()
         mavenCentral()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.7.2'
         classpath 'com.google.gms:google-services:4.4.2'
+        classpath 'org.mozilla.rust-android-gradle:plugin:0.9.4'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
+}
+
+plugins {
+  id("org.mozilla.rust-android-gradle.rust-android") version "0.9.4"
+  id("org.jetbrains.kotlin.jvm") version "2.0.21"
 }
 
 apply from: "variables.gradle"
@@ -22,8 +31,4 @@ allprojects {
         google()
         mavenCentral()
     }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }

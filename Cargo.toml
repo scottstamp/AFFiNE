@@ -3,12 +3,14 @@ members  = [
     "./packages/backend/native",
     "./packages/common/native",
     "./packages/frontend/native",
-    "./packages/frontend/native/schema"
+    "./packages/frontend/native/schema",
+    "./packages/frontend/mobile-native",
 ]
 resolver = "2"
 
 [workspace.dependencies]
 affine_common = { path = "./packages/common/native" }
+criterion2    = { version = "2", default-features = false }
 anyhow        = "1"
 chrono        = "0.4"
 dotenv        = "0.15"
