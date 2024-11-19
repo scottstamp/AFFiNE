@@ -7,6 +7,7 @@ export interface Backlink {
   docId: string;
   blockId: string;
   title: string;
+  markdownPreview?: string;
 }
 
 export class DocBacklinks extends Entity {

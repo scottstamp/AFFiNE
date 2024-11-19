@@ -478,7 +478,7 @@ export class DocsSearchService extends Service {
         'docId',
         {
           hits: {
-            fields: ['docId', 'blockId'],
+            fields: ['docId', 'blockId', 'markdownPreview'],
             pagination: {
               limit: 1,
             },
@@ -499,10 +499,16 @@ export class DocsSearchService extends Service {
               const title =
                 docData.find(doc => doc.id === bucket.key)?.get('title') ?? '';
               const blockId = bucket.hits.nodes[0]?.fields.blockId ?? '';
+              const markdownPreview =
+                bucket.hits.nodes[0]?.fields.markdownPreview ?? '';
               return {
                 docId: bucket.key,
                 blockId: typeof blockId === 'string' ? blockId : blockId[0],
                 title: typeof title === 'string' ? title : title[0],
+                markdownPreview:
+                  typeof markdownPreview === 'string'
+                    ? markdownPreview
+                    : markdownPreview[0],
               };
             });
           });

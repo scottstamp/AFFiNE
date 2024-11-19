@@ -1,6 +1,16 @@
-import type { AffineTextAttributes } from '@blocksuite/affine/blocks';
+import {
+  type AffineTextAttributes,
+  MarkdownAdapter,
+} from '@blocksuite/affine/blocks';
+import {
+  createYProxy,
+  DocCollection,
+  type DraftModel,
+  Job,
+  type YBlock,
+} from '@blocksuite/affine/store';
 import type { DeltaInsert } from '@blocksuite/inline';
-import { Document } from '@toeverything/infra';
+import { Document, getAFFiNEWorkspaceSchema } from '@toeverything/infra';
 import { toHexString } from 'lib0/buffer.js';
 import { digest as lib0Digest } from 'lib0/hash/sha256';
 import { difference, uniq } from 'lodash-es';
@@ -19,6 +29,8 @@ import type {
   WorkerOutgoingMessage,
   WorkerOutput,
 } from './types';
+
+const blocksuiteSchema = getAFFiNEWorkspaceSchema();
 
 const LRU_CACHE_SIZE = 5;
 
@@ -60,6 +72,93 @@ async function getOrCreateCachedYDoc(data: Uint8Array) {
     }
   }
 }
+
+function yblockToDraftModal(yblock: YBlock): DraftModel | null {
+  const flavour = yblock.get('sys:flavour');
+  const blockSchema = blocksuiteSchema.flavourSchemaMap.get(flavour);
+  if (!blockSchema) {
+    return null;
+  }
+  const keys = Array.from(yblock.keys())
+    .filter(key => key.startsWith('prop:'))
+    .map(key => key.substring(5));
+
+  const props = Object.fromEntries(
+    keys.map(key => [key, createYProxy(yblock.get(`prop:${key}`))])
+  );
+
+  return {
+    ...props,
+    id: yblock.get('sys:id'),
+    flavour,
+    children: [],
+    role: blockSchema.model.role,
+    version: (yblock.get('sys:version') as number) ?? blockSchema.version,
+    keys: Array.from(yblock.keys())
+      .filter(key => key.startsWith('prop:'))
+      .map(key => key.substring(5)),
+    page: null as any,
+  };
+}
+
+const markdownAdapter = new MarkdownAdapter(
+  new Job({
+    collection: new DocCollection({
+      id: 'indexer',
+      schema: blocksuiteSchema,
+    }),
+  })
+);
+
+interface BlockDocumentInfo {
+  docId: string;
+  blockId: string;
+  content?: string | string[];
+  flavour: string;
+  blob?: string[];
+  refDocId?: string[];
+  ref?: string[];
+  parentFlavour?: string;
+  parentBlockId?: string;
+  additional?: { databaseName?: string };
+  yblock: YMap<any>;
+  markdownPreview?: string;
+}
+
+const markdownPreviewCache = new WeakMap<BlockDocumentInfo, string | null>();
+const generateMarkdownPreview = async (block: BlockDocumentInfo) => {
+  if (markdownPreviewCache.has(block)) {
+    return markdownPreviewCache.get(block);
+  }
+  const flavour = block.flavour;
+  let markdown: string | null = null;
+  if (
+    flavour === 'affine:paragraph' ||
+    flavour === 'affine:list' ||
+    flavour === 'affine:code'
+  ) {
+    const draftModel = yblockToDraftModal(block.yblock);
+    markdown =
+      block.parentFlavour === 'affine:database'
+        ? `database · ${block.additional?.databaseName}\n`
+        : ((draftModel ? await markdownAdapter.fromBlock(draftModel) : null)
+            ?.file ?? null);
+  }
+  if (
+    flavour === 'affine:embed-linked-doc' ||
+    flavour === 'affine:embed-synced-doc'
+  ) {
+    markdown = '🔗\n';
+  }
+  if (flavour === 'affine:attachment') {
+    markdown = '📃\n';
+  }
+  if (flavour === 'affine:image') {
+    markdown = '🖼️\n';
+  }
+  markdownPreviewCache.set(block, markdown);
+  return markdown;
+};
 
 async function crawlingDocData({
   docBuffer,
@@ -110,7 +209,7 @@ async function crawlingDocData({
     let docTitle = '';
     let summaryLenNeeded = 1000;
     let summary = '';
-    const blockDocuments: Document<BlockIndexSchema>[] = [];
+    const blockDocuments: BlockDocumentInfo[] = [];
 
     const blocks = ydoc.getMap<any>('blocks');
 
@@ -147,6 +246,7 @@ async function crawlingDocData({
       }
     };
 
+    // #region first loop - generate block base info
     while (queue.length) {
       const next = queue.pop();
       if (!next) {
@@ -167,14 +267,13 @@ async function crawlingDocData({
 
       if (flavour === 'affine:page') {
         docTitle = block.get('prop:title').toString();
-        blockDocuments.push(
-          Document.from(`${docId}:${blockId}`, {
-            docId,
-            flavour,
-            blockId,
-            content: docTitle,
-          })
-        );
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
+          content: docTitle,
+          yblock: block,
+        });
       }
 
       if (
@@ -183,6 +282,7 @@ async function crawlingDocData({
         flavour === 'affine:code'
       ) {
         const text = block.get('prop:text') as YText;
+
         if (!text) {
           continue;
         }
@@ -213,27 +313,24 @@ async function crawlingDocData({
             ? parentBlock?.get('prop:title')?.toString()
             : undefined;
 
-        blockDocuments.push(
-          Document.from<BlockIndexSchema>(`${docId}:${blockId}`, {
-            docId,
-            flavour,
-            blockId,
-            content: text.toString(),
-            ...refs.reduce<{ refDocId: string[]; ref: string[] }>(
-              (prev, curr) => {
-                prev.refDocId.push(curr.refDocId);
-                prev.ref.push(curr.ref);
-                return prev;
-              },
-              { refDocId: [], ref: [] }
-            ),
-            parentFlavour,
-            parentBlockId,
-            additional: databaseName
-              ? JSON.stringify({ databaseName })
-              : undefined,
-          })
-        );
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
+          content: text.toString(),
+          ...refs.reduce<{ refDocId: string[]; ref: string[] }>(
+            (prev, curr) => {
+              prev.refDocId.push(curr.refDocId);
+              prev.ref.push(curr.ref);
+              return prev;
+            },
+            { refDocId: [], ref: [] }
+          ),
+          parentFlavour,
+          parentBlockId,
+          additional: { databaseName },
+          yblock: block,
+        });
 
         if (summaryLenNeeded > 0) {
           summary += text.toString();
@@ -249,33 +346,31 @@ async function crawlingDocData({
         if (typeof pageId === 'string') {
           // reference info
           const params = block.get('prop:params') ?? {};
-          blockDocuments.push(
-            Document.from<BlockIndexSchema>(`${docId}:${blockId}`, {
-              docId,
-              flavour,
-              blockId,
-              refDocId: [pageId],
-              ref: [JSON.stringify({ docId: pageId, ...params })],
-              parentFlavour,
-              parentBlockId,
-            })
-          );
+          blockDocuments.push({
+            docId,
+            flavour,
+            blockId,
+            refDocId: [pageId],
+            ref: [JSON.stringify({ docId: pageId, ...params })],
+            parentFlavour,
+            parentBlockId,
+            yblock: block,
+          });
         }
       }
 
       if (flavour === 'affine:attachment' || flavour === 'affine:image') {
         const blobId = block.get('prop:sourceId');
         if (typeof blobId === 'string') {
-          blockDocuments.push(
-            Document.from<BlockIndexSchema>(`${docId}:${blockId}`, {
-              docId,
-              flavour,
-              blockId,
-              blob: [blobId],
-              parentFlavour,
-              parentBlockId,
-            })
-          );
+          blockDocuments.push({
+            docId,
+            flavour,
+            blockId,
+            blob: [blobId],
+            parentFlavour,
+            parentBlockId,
+            yblock: block,
+          });
         }
       }
 
@@ -308,16 +403,15 @@ async function crawlingDocData({
           texts.push(text.toString());
         }
 
-        blockDocuments.push(
-          Document.from<BlockIndexSchema>(`${docId}:${blockId}`, {
-            docId,
-            flavour,
-            blockId,
-            content: texts,
-            parentFlavour,
-            parentBlockId,
-          })
-        );
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
+          content: texts,
+          parentFlavour,
+          parentBlockId,
+          yblock: block,
+        });
       }
 
       if (flavour === 'affine:database') {
@@ -356,16 +450,81 @@ async function crawlingDocData({
           }
         }
 
-        blockDocuments.push(
-          Document.from<BlockIndexSchema>(`${docId}:${blockId}`, {
-            docId,
-            flavour,
-            blockId,
-            content: texts,
-          })
-        );
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
+          content: texts,
+          yblock: block,
+        });
       }
     }
+    // #endregion
+
+    // #region second loop - generate markdown preview
+    const TARGET_PREVIEW_CHARACTER = 500;
+    const TARGET_PREVIOUS_BLOCK = 1;
+    const TARGET_FOLLOW_BLOCK = 4;
+    for (let i = 0; i < blockDocuments.length; i++) {
+      const block = blockDocuments[i];
+      if (block.ref) {
+        // only generate markdown preview for reference blocks
+        let previewText = (await generateMarkdownPreview(block)) ?? '';
+        let previousBlock = 0;
+        let followBlock = 0;
+        let previousIndex = i;
+        let followIndex = i;
+
+        while (
+          !(
+            (
+              previewText.length > TARGET_PREVIEW_CHARACTER || // stop if preview text reaches the limit
+              ((previousBlock >= TARGET_PREVIOUS_BLOCK || previousIndex < 0) &&
+                (followBlock >= TARGET_FOLLOW_BLOCK ||
+                  followIndex >= blockDocuments.length))
+            ) // stop if no more blocks, or preview block reaches the limit
+          )
+        ) {
+          if (previousBlock < TARGET_PREVIOUS_BLOCK) {
+            previousIndex--;
+            const block =
+              previousIndex >= 0 ? blockDocuments.at(previousIndex) : null;
+            const markdown = block
+              ? await generateMarkdownPreview(block)
+              : null;
+            if (
+              markdown &&
+              !previewText.startsWith(
+                markdown
+              ) /* A small hack to skip blocks with the same content */
+            ) {
+              previewText = markdown + previewText;
+              previousBlock++;
+            }
+          }
+
+          if (followBlock < TARGET_FOLLOW_BLOCK) {
+            followIndex++;
+            const block = blockDocuments.at(followIndex);
+            const markdown = block
+              ? await generateMarkdownPreview(block)
+              : null;
+            if (
+              markdown &&
+              !previewText.endsWith(
+                markdown
+              ) /* A small hack to skip blocks with the same content */
+            ) {
+              previewText = previewText + markdown;
+              followBlock++;
+            }
+          }
+        }
+
+        block.markdownPreview = previewText;
+      }
+    }
+    // #endregion
 
     return {
       addedDoc: [
@@ -375,7 +534,23 @@ async function crawlingDocData({
             title: docTitle,
             summary,
           }),
-          blocks: blockDocuments,
+          blocks: blockDocuments.map(block =>
+            Document.from<BlockIndexSchema>(`${docId}:${block.blockId}`, {
+              docId: block.docId,
+              blockId: block.blockId,
+              content: block.content,
+              flavour: block.flavour,
+              blob: block.blob,
+              refDocId: block.refDocId,
+              ref: block.ref,
+              parentFlavour: block.parentFlavour,
+              parentBlockId: block.parentBlockId,
+              additional: block.additional
+                ? JSON.stringify(block.additional)
+                : undefined,
+              markdownPreview: block.markdownPreview,
+            })
+          ),
         },
       ],
     };

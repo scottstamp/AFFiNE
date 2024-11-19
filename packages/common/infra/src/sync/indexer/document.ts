@@ -40,7 +40,7 @@ export class Document<S extends Schema = any> {
       }
     } else {
       for (const key in map) {
-        if (map[key] === undefined) {
+        if (map[key] === undefined || map[key] === null) {
           continue;
         }
         doc.insert(key, map[key]);

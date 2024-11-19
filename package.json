@@ -156,6 +156,7 @@
     "which-typed-array": "npm:@nolyfill/which-typed-array@latest",
     "macos-alias": "npm:@napi-rs/macos-alias@0.0.4",
     "fs-xattr": "npm:@napi-rs/xattr@latest",
-    "vite": "6.0.1"
+    "vite": "6.0.1",
+    "decode-named-character-reference@npm:^1.0.0": "patch:decode-named-character-reference@npm%3A1.0.2#~/.yarn/patches/decode-named-character-reference-npm-1.0.2-db17a755fd.patch"
   }
 }

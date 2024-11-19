@@ -36,7 +36,7 @@ export class DocsIndexer extends Entity {
   /**
    * increase this number to re-index all docs
    */
-  static INDEXER_VERSION = 6;
+  static INDEXER_VERSION = 10;
 
   private readonly jobQueue: JobQueue<IndexerJobPayload> =
     new IndexedDBJobQueue<IndexerJobPayload>(

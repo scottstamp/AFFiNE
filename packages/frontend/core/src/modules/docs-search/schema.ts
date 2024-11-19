@@ -28,6 +28,7 @@ export const blockIndexSchema = defineSchema({
   // additional info
   // { "databaseName": "xxx" }
   additional: { type: 'String', index: false },
+  markdownPreview: { type: 'String', index: false },
 });
 
 export type BlockIndexSchema = typeof blockIndexSchema;

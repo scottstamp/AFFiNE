@@ -5,7 +5,7 @@ import {
 } from '@affine/core/modules/doc-link';
 import { useI18n } from '@affine/i18n';
 import { LiveData, useLiveData, useServices } from '@toeverything/infra';
-import { useCallback, useState } from 'react';
+import { Fragment, useCallback, useState } from 'react';
 
 import { AffinePageReference } from '../../affine/reference-link';
 import * as styles from './bi-directional-link-panel.css';
@@ -52,9 +52,14 @@ export const BiDirectionalLinkPanel = () => {
               {t['com.affine.page-properties.backlinks']()} · {backlinks.length}
             </div>
             {backlinks.map(link => (
-              <div key={link.docId} className={styles.link}>
-                <AffinePageReference key={link.docId} pageId={link.docId} />
-              </div>
+              <Fragment key={link.docId}>
+                <div className={styles.link}>
+                  <AffinePageReference key={link.docId} pageId={link.docId} />
+                </div>
+                <br />
+                <pre style={{ opacity: 0.5 }}>{link.markdownPreview}</pre>
+                <br />
+              </Fragment>
             ))}
           </div>
           <div className={styles.linksContainer}>
