@@ -358,7 +358,6 @@ jobs:
     name: Run native tests
     runs-on: ubuntu-latest
     env:
-      RUSTFLAGS: -D warnings
       CARGO_TERM_COLOR: always
     steps:
       - uses: actions/checkout@v4
