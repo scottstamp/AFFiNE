@@ -162,7 +162,7 @@ export async function createRandomAIUser(
 }> {
   const user = {
     name: faker.internet.username(),
-    email: faker.internet.email().toLowerCase(),
+    email: faker.internet.email({ provider }).toLowerCase(),
     password: '123456',
   };
   const result = await connector(async client => {
