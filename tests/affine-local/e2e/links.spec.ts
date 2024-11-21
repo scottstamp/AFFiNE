@@ -1,4 +1,5 @@
 import { test } from '@affine-test/kit/playwright';
+import { locateModeSwitchButton } from '@affine-test/kit/utils/editor';
 import {
   pasteByKeyboard,
   writeTextToClipboard,
@@ -417,4 +418,136 @@ test('@ popover with click "select a specific date" should show a date picker', 
   await expect(
     page.locator('affine-reference:has-text("' + date + '")')
   ).toBeVisible();
+});
+
+test('the viewport should be fit when the linked document is with edgeless mode', async ({
+  page,
+}) => {
+  await page.keyboard.press('Enter');
+
+  await locateModeSwitchButton(page, 'edgeless').click();
+
+  const note = page.locator('affine-edgeless-note');
+  const noteBoundingBox = await note.boundingBox();
+  expect(noteBoundingBox).not.toBeNull();
+  if (!noteBoundingBox) return;
+
+  // move viewport
+  const { x, y } = noteBoundingBox;
+  await page.mouse.click(x, y);
+  await page.keyboard.down('Space');
+  await page.waitForTimeout(50);
+  await page.mouse.down();
+  await page.mouse.move(x + 1000, y);
+  await page.mouse.up();
+  await page.keyboard.up('Space');
+
+  // create edgeless text
+  await page.keyboard.press('t');
+  await page.mouse.click(x, y);
+  await page.locator('affine-edgeless-text').waitFor({ state: 'visible' });
+  await page.keyboard.type('Edgeless Text');
+
+  const url = new URL(page.url());
+
+  await clickNewPageButton(page);
+  await page.keyboard.press('Enter');
+
+  await writeTextToClipboard(page, url.toString());
+  await pasteByKeyboard(page);
+
+  // Inline
+  await page.locator('affine-reference').hover();
+  await page.getByLabel('Switch view').click();
+  await page.getByTestId('link-to-embed').click();
+
+  const viewport = await page
+    .locator('affine-embed-synced-doc-block')
+    .boundingBox();
+  expect(viewport).not.toBeNull();
+  if (!viewport) return;
+
+  const edgelessText = await page
+    .locator('affine-embed-synced-doc-block affine-edgeless-text')
+    .boundingBox();
+  expect(edgelessText).not.toBeNull();
+  if (!edgelessText) return;
+
+  // the edgeless text should be in the viewport
+  expect(viewport.x).toBeLessThanOrEqual(edgelessText.x);
+  expect(viewport.y).toBeLessThanOrEqual(edgelessText.y);
+  expect(viewport.x + viewport.width).toBeGreaterThanOrEqual(
+    edgelessText.x + edgelessText.width
+  );
+  expect(viewport.y + viewport.height).toBeGreaterThanOrEqual(
+    edgelessText.y + edgelessText.height
+  );
+});
+
+test('should show edgeless content when switching card view of linked mode doc in edgeless', async ({
+  page,
+}) => {
+  await page.keyboard.press('Enter');
+
+  await locateModeSwitchButton(page, 'edgeless').click();
+
+  const note = page.locator('affine-edgeless-note');
+  const noteBoundingBox = await note.boundingBox();
+  expect(noteBoundingBox).not.toBeNull();
+  if (!noteBoundingBox) return;
+
+  // move viewport
+  const { x, y } = noteBoundingBox;
+  await page.mouse.click(x, y);
+  await page.keyboard.down('Space');
+  await page.waitForTimeout(50);
+  await page.mouse.down();
+  await page.mouse.move(x + 1000, y);
+  await page.mouse.up();
+  await page.keyboard.up('Space');
+
+  // create edgeless text
+  await page.keyboard.press('t');
+  await page.mouse.click(x, y);
+  await page.locator('affine-edgeless-text').waitFor({ state: 'visible' });
+  await page.keyboard.type('Edgeless Text');
+
+  const url = new URL(page.url());
+
+  await clickNewPageButton(page);
+  await locateModeSwitchButton(page, 'edgeless').click();
+
+  await page.mouse.move(x, y);
+  await writeTextToClipboard(page, url.toString());
+  await pasteByKeyboard(page);
+
+  // Inline
+  await page
+    .locator('affine-embed-edgeless-linked-doc-block')
+    .waitFor({ state: 'visible' });
+  await page.mouse.click(x - 50, y - 50);
+  await page.getByLabel('Switch view').click();
+  await page.getByTestId('link-to-embed').click();
+
+  const viewport = await page
+    .locator('affine-embed-edgeless-synced-doc-block')
+    .boundingBox();
+  expect(viewport).not.toBeNull();
+  if (!viewport) return;
+
+  const edgelessText = await page
+    .locator('affine-embed-edgeless-synced-doc-block affine-edgeless-text')
+    .boundingBox();
+  expect(edgelessText).not.toBeNull();
+  if (!edgelessText) return;
+
+  // the edgeless text should be in the viewport
+  expect(viewport.x).toBeLessThanOrEqual(edgelessText.x);
+  expect(viewport.y).toBeLessThanOrEqual(edgelessText.y);
+  expect(viewport.x + viewport.width).toBeGreaterThanOrEqual(
+    edgelessText.x + edgelessText.width
+  );
+  expect(viewport.y + viewport.height).toBeGreaterThanOrEqual(
+    edgelessText.y + edgelessText.height
+  );
 });
