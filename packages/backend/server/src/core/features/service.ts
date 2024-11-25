@@ -3,30 +3,15 @@ import { PrismaClient } from '@prisma/client';
 
 import { CannotDeleteAllAdminAccount } from '../../fundamentals';
 import { WorkspaceType } from '../workspaces/types';
-import { FeatureConfigType, getFeature } from './feature';
+import { FeatureExecutor } from './executor';
 import { FeatureKind, FeatureType } from './types';
 
 @Injectable()
 export class FeatureService {
-  constructor(private readonly prisma: PrismaClient) {}
-
-  async getFeature<F extends FeatureType>(feature: F) {
-    const data = await this.prisma.feature.findFirst({
-      where: {
-        feature,
-        type: FeatureKind.Feature,
-      },
-      select: { id: true },
-      orderBy: {
-        version: 'desc',
-      },
-    });
-
-    if (data) {
-      return getFeature(this.prisma, data.id) as Promise<FeatureConfigType<F>>;
-    }
-    return undefined;
-  }
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly feature: FeatureExecutor
+  ) {}
 
   // ======== User Features ========
 
@@ -136,14 +121,13 @@ export class FeatureService {
       },
     });
 
-    const configs = await Promise.all(
-      features.map(async feature => ({
+    return features
+      .map(feature => ({
         ...feature,
-        feature: await getFeature(this.prisma, feature.featureId),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        feature: this.feature.getFeature(feature.featureId)!,
       }))
-    );
-
-    return configs.filter(feature => !!feature.feature);
+      .filter(feature => !!feature.feature);
   }
 
   async getActivatedUserFeatures(userId: string) {
@@ -163,14 +147,13 @@ export class FeatureService {
       },
     });
 
-    const configs = await Promise.all(
-      features.map(async feature => ({
+    return features
+      .map(feature => ({
         ...feature,
-        feature: await getFeature(this.prisma, feature.featureId),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        feature: this.feature.getFeature(feature.featureId)!,
       }))
-    );
-
-    return configs.filter(feature => !!feature.feature);
+      .filter(feature => !!feature.feature);
   }
 
   async listFeatureUsers(feature: FeatureType) {
@@ -308,14 +291,13 @@ export class FeatureService {
       },
     });
 
-    const configs = await Promise.all(
-      features.map(async feature => ({
+    return features
+      .map(feature => ({
         ...feature,
-        feature: await getFeature(this.prisma, feature.featureId),
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        feature: this.feature.getFeature(feature.featureId)!,
       }))
-    );
-
-    return configs.filter(feature => !!feature.feature);
+      .filter(feature => !!feature.feature);
   }
 
   async listFeatureWorkspaces(feature: FeatureType): Promise<WorkspaceType[]> {

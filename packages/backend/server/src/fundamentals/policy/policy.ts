@@ -15,11 +15,11 @@ export class Policy {
    * @param data the data to evaluate
    * @returns return directly if success, throw new Error if failed
    */
-  evaluate<P extends PolicyType>(policy: P, data: PolicyData<P>) {
+  async evaluate<P extends PolicyType>(policy: P, data: PolicyData<P>) {
     const policies = getExecutors(policy);
     if (policies.length > 0) {
       for (const p of policies) {
-        if (p.evaluate(policy, data)) {
+        if (await p.evaluate(policy, data)) {
           // return if pass one policy
           return;
         }

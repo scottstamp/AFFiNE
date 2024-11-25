@@ -10,5 +10,5 @@ export abstract class PolicyExecutor {
   abstract evaluate<P extends PolicyType>(
     policy: P,
     data: PolicyData<P>
-  ): boolean; // evaluate the policy
+  ): Promise<boolean>; // evaluate the policy
 }

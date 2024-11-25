@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { UserModule } from '../user';
+import { FeatureExecutor } from './executor';
 import { EarlyAccessType, FeatureManagementService } from './management';
 import {
   AdminFeatureManagementResolver,
@@ -17,6 +18,7 @@ import { FeatureService } from './service';
 @Module({
   imports: [UserModule],
   providers: [
+    FeatureExecutor,
     FeatureService,
     FeatureManagementService,
     FeatureManagementResolver,
