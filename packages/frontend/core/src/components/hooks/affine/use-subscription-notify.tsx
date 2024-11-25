@@ -46,7 +46,11 @@ export const generateSubscriptionCallbackLink = (
     throw new Error('Account is required');
   }
   const baseUrl =
-    plan === SubscriptionPlan.AI ? '/ai-upgrade-success' : '/upgrade-success';
+    plan === SubscriptionPlan.AI
+      ? '/ai-upgrade-success'
+      : plan === SubscriptionPlan.Team
+        ? '/upgrade-success/team'
+        : '/upgrade-success';
 
   let name = account?.info?.name ?? '';
   if (name.includes(separator)) {

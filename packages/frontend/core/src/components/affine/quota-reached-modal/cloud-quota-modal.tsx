@@ -4,12 +4,14 @@ import { UserQuotaService } from '@affine/core/modules/cloud';
 import { GlobalDialogService } from '@affine/core/modules/dialogs';
 import { WorkspacePermissionService } from '@affine/core/modules/permissions';
 import { WorkspaceQuotaService } from '@affine/core/modules/quota';
-import { useI18n } from '@affine/i18n';
+import { type I18nString, useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
 import { useLiveData, useService, WorkspaceService } from '@toeverything/infra';
 import bytes from 'bytes';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useMemo } from 'react';
+
+import * as styles from './cloud-quota-modal.css';
 
 export const CloudQuotaModal = () => {
   const t = useI18n();
@@ -39,10 +41,6 @@ export const CloudQuotaModal = () => {
     )
   );
 
-  const isFreePlanOwner = useMemo(() => {
-    return isOwner && userQuota?.name === 'free';
-  }, [isOwner, userQuota]);
-
   const globalDialogService = useService(GlobalDialogService);
   const handleUpgradeConfirm = useCallback(() => {
     globalDialogService.open('setting', {
@@ -55,18 +53,8 @@ export const CloudQuotaModal = () => {
   }, [globalDialogService, setOpen]);
 
   const description = useMemo(() => {
-    if (userQuota && isFreePlanOwner) {
-      return t['com.affine.payment.blob-limit.description.owner.free']({
-        planName: userQuota.name,
-        currentQuota: userQuota.blobLimit,
-        upgradeQuota: '100MB',
-      });
-    }
-    if (isOwner && userQuota && userQuota.name.toLowerCase() === 'pro') {
-      return t['com.affine.payment.blob-limit.description.owner.pro']({
-        planName: userQuota.name,
-        quota: userQuota.blobLimit,
-      });
+    if (userQuota && isOwner) {
+      return <OwnerDescription quota={userQuota.blobLimit} />;
     }
     if (workspaceQuota) {
       return t['com.affine.payment.blob-limit.description.member']({
@@ -76,7 +64,7 @@ export const CloudQuotaModal = () => {
       // loading
       return null;
     }
-  }, [userQuota, isFreePlanOwner, isOwner, workspaceQuota, t]);
+  }, [userQuota, isOwner, workspaceQuota, t]);
 
   useEffect(() => {
     if (!workspaceQuota) {
@@ -100,16 +88,36 @@ export const CloudQuotaModal = () => {
       title={t['com.affine.payment.blob-limit.title']()}
       onOpenChange={setOpen}
       description={description}
-      cancelButtonOptions={{
-        hidden: !isFreePlanOwner,
-      }}
       onConfirm={handleUpgradeConfirm}
-      confirmText={
-        isFreePlanOwner ? t['com.affine.payment.upgrade']() : t['Got it']()
-      }
+      confirmText={t['com.affine.payment.upgrade']()}
       confirmButtonOptions={{
         variant: 'primary',
       }}
     />
+  );
+};
+
+const tips: I18nString[] = [
+  'com.affine.payment.blob-limit.description.owner.tips-1',
+  'com.affine.payment.blob-limit.description.owner.tips-2',
+  'com.affine.payment.blob-limit.description.owner.tips-3',
+];
+
+const OwnerDescription = ({ quota }: { quota: string }) => {
+  const t = useI18n();
+  return (
+    <div>
+      {t['com.affine.payment.blob-limit.description.owner']({
+        quota: quota,
+      })}
+      <ul className={styles.ulStyle}>
+        {tips.map((tip, index) => (
+          <li className={styles.liStyle} key={index}>
+            <div className={styles.prefixDot} />
+            {t.t(tip)}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 };

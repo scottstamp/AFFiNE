@@ -29,6 +29,7 @@ import { forwardRef, useCallback, useEffect, useState } from 'react';
 
 import { useCatchEventCallback } from '../../hooks/use-catch-event-hook';
 import * as styles from './styles.css';
+export { PureWorkspaceCard } from './pure-workspace-card';
 
 const CloudWorkspaceStatus = () => {
   return (
@@ -338,7 +339,7 @@ export const WorkspaceCard = forwardRef<
 
         {active && (
           <div className={styles.activeContainer}>
-            <DoneIcon className={styles.activeIcon} />{' '}
+            <DoneIcon className={styles.activeIcon} />
           </div>
         )}
       </div>

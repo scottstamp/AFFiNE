@@ -74,19 +74,14 @@ const proBenefits: BenefitsGetter = t => ({
 });
 
 const teamBenefits: BenefitsGetter = t => ({
-  [t['com.affine.payment.cloud.team.benefit.g1']()]: [
+  [t['com.affine.payment.cloud.team-workspace.benefit.g1']()]: [
     {
-      title: t['com.affine.payment.cloud.team.benefit.g1-1'](),
+      title: t['com.affine.payment.cloud.team-workspace.benefit.g1-1'](),
       icon: <AfFiNeIcon />,
     },
-    ...([2, 3, 4] as const).map(i => ({
-      title: t[`com.affine.payment.cloud.team.benefit.g1-${i}`](),
+    ...([2, 3, 4, 5, 6] as const).map(i => ({
+      title: t[`com.affine.payment.cloud.team-workspace.benefit.g1-${i}`](),
     })),
-  ],
-  [t['com.affine.payment.cloud.team.benefit.g2']()]: [
-    { title: t['com.affine.payment.cloud.team.benefit.g2-1']() },
-    { title: t['com.affine.payment.cloud.team.benefit.g2-2']() },
-    { title: t['com.affine.payment.cloud.team.benefit.g2-3']() },
   ],
 });
 
@@ -138,12 +133,34 @@ export function getPlanDetail(t: T) {
     [
       SubscriptionPlan.Team,
       {
-        type: 'dynamic',
+        type: 'fixed',
         plan: SubscriptionPlan.Team,
-        contact: true,
-        name: t['com.affine.payment.cloud.team.name'](),
-        description: t['com.affine.payment.cloud.team.description'](),
-        titleRenderer: () => t['com.affine.payment.cloud.team.title'](),
+        price: '15',
+        yearlyPrice: '12',
+        name: t['com.affine.payment.cloud.team-workspace.name'](),
+        description: t['com.affine.payment.cloud.team-workspace.description'](),
+        titleRenderer: (recurring, detail) => {
+          const price =
+            recurring === SubscriptionRecurring.Yearly
+              ? detail.yearlyPrice
+              : detail.price;
+          return (
+            <>
+              {t['com.affine.payment.cloud.team-workspace.title.price-monthly'](
+                {
+                  price: '$' + price,
+                }
+              )}
+              {recurring === SubscriptionRecurring.Yearly ? (
+                <span className={planTitleTitleCaption}>
+                  {t[
+                    'com.affine.payment.cloud.team-workspace.title.billed-yearly'
+                  ]()}
+                </span>
+              ) : null}
+            </>
+          );
+        },
         benefits: teamBenefits(t),
       },
     ],

@@ -1,6 +1,6 @@
 import { Button } from '@affine/component';
 import { AuthService, SubscriptionService } from '@affine/core/modules/cloud';
-import { SubscriptionRecurring } from '@affine/graphql';
+import { SubscriptionPlan, SubscriptionRecurring } from '@affine/graphql';
 import { Trans, useI18n } from '@affine/i18n';
 import { useLiveData, useService } from '@toeverything/infra';
 
@@ -46,6 +46,7 @@ export const LifetimePlan = () => {
         <Upgrade
           className={styles.purchase}
           recurring={SubscriptionRecurring.Lifetime}
+          plan={SubscriptionPlan.Pro}
         >
           {t['com.affine.payment.lifetime.purchase']()}
         </Upgrade>

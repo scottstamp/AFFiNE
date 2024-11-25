@@ -65,6 +65,10 @@ export const topLevelRoutes = [
         lazy: () => import('./pages/upgrade-success'),
       },
       {
+        path: '/upgrade-success/team',
+        lazy: () => import('./pages/upgrade-success/team'),
+      },
+      {
         path: '/ai-upgrade-success',
         lazy: () => import('./pages/ai-upgrade-success'),
       },
@@ -79,6 +83,10 @@ export const topLevelRoutes = [
       {
         path: '/subscribe',
         lazy: () => import('./pages/subscribe'),
+      },
+      {
+        path: '/upgrade-to-team',
+        lazy: () => import('./pages/upgrade-to-team'),
       },
       {
         path: '/try-cloud',

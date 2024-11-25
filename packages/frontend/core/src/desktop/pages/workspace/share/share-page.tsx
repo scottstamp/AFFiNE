@@ -4,7 +4,6 @@ import { useActiveBlocksuiteEditor } from '@affine/core/components/hooks/use-blo
 import { usePageDocumentTitle } from '@affine/core/components/hooks/use-global-state';
 import { useNavigateHelper } from '@affine/core/components/hooks/use-navigate-helper';
 import { PageDetailEditor } from '@affine/core/components/page-detail-editor';
-import { SharePageNotFoundError } from '@affine/core/components/share-page-not-found-error';
 import { AppContainer } from '@affine/core/desktop/components/app-container';
 import {
   AuthService,
@@ -108,7 +107,6 @@ export const SharePage = ({
   }, [shareReaderService, docId, workspaceId]);
 
   let element: ReactNode = null;
-
   if (isLoading) {
     element = null;
   } else if (data) {
@@ -126,7 +124,8 @@ export const SharePage = ({
       />
     );
   } else if (error) {
-    element = <SharePageNotFoundError />;
+    // TODO(@JimmFly): handle error
+    element = <PageNotFound />;
   } else {
     element = <PageNotFound noPermission />;
   }

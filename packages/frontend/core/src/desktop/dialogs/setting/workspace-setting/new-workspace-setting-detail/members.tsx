@@ -187,7 +187,7 @@ export const CloudWorkspaceMembersPanel = ({
             <Button onClick={openModal}>{t['Invite Members']()}</Button>
             {isLimited ? (
               <MemberLimitModal
-                isFreePlan={!!plan}
+                isFreePlan={!plan}
                 open={open}
                 plan={workspaceQuota.humanReadable.name ?? ''}
                 quota={workspaceQuota.humanReadable.memberLimit ?? ''}

@@ -38,17 +38,17 @@ export const OverCapacityNotification = () => {
           }
           if (isOwner) {
             notify.warning({
-              title: t['com.affine.payment.storage-limit.title'](),
+              title: t['com.affine.payment.storage-limit.new-title'](),
               message:
-                t['com.affine.payment.storage-limit.description.owner'](),
+                t['com.affine.payment.storage-limit.new-description.owner'](),
               action: {
-                label: t['com.affine.payment.storage-limit.view'](),
+                label: t['com.affine.payment.upgrade'](),
                 onClick: jumpToPricePlan,
               },
             });
           } else {
             notify.warning({
-              title: t['com.affine.payment.storage-limit.title'](),
+              title: t['com.affine.payment.storage-limit.new-title'](),
               message:
                 t['com.affine.payment.storage-limit.description.member'](),
             });

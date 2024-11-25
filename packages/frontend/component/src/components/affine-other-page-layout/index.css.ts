@@ -7,7 +7,8 @@ export const root = style({
   flexDirection: 'column',
   fontSize: cssVar('fontBase'),
   position: 'relative',
-  background: cssVar('backgroundPrimaryColor'),
+  backgroundColor: cssVar('backgroundPrimaryColor'),
+  backgroundSize: 'cover',
 });
 export const affineLogo = style({
   color: 'inherit',
