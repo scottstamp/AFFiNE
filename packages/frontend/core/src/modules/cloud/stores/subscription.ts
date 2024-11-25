@@ -23,7 +23,7 @@ const SUBSCRIPTION_CACHE_KEY = 'subscription:';
 
 const getDefaultSubscriptionSuccessCallbackLink = (
   baseUrl: string,
-  plan: SubscriptionPlan | null,
+  plan?: SubscriptionPlan | null,
   scheme?: string
 ) => {
   const path =

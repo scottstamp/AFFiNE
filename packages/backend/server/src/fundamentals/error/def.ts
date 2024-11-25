@@ -424,6 +424,10 @@ export const USER_FRIENDLY_ERRORS = {
     type: 'action_forbidden',
     message: 'Your subscription has already been canceled.',
   },
+  subscription_has_not_been_canceled: {
+    type: 'action_forbidden',
+    message: 'Your subscription has not been canceled.',
+  },
   subscription_expired: {
     type: 'action_forbidden',
     message: 'Your subscription has expired.',
@@ -446,6 +450,14 @@ export const USER_FRIENDLY_ERRORS = {
   cant_update_onetime_payment_subscription: {
     type: 'action_forbidden',
     message: 'You cannot update an onetime payment subscription.',
+  },
+  workspace_id_required_for_team_subscription: {
+    type: 'invalid_input',
+    message: 'A workspace is required to checkout for team subscription.',
+  },
+  workspace_id_required_to_update_team_subscription: {
+    type: 'invalid_input',
+    message: 'Workspace id is required to update team subscription.',
   },
 
   // Copilot errors

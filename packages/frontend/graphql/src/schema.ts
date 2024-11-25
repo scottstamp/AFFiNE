@@ -77,8 +77,8 @@ export interface Copilot {
 }
 
 export interface CopilotHistoriesArgs {
-  docId: InputMaybe<Scalars['String']['input']>;
-  options: InputMaybe<QueryChatHistoriesInput>;
+  docId?: InputMaybe<Scalars['String']['input']>;
+  options?: InputMaybe<QueryChatHistoriesInput>;
 }
 
 export interface CopilotHistories {
@@ -111,11 +111,11 @@ export enum CopilotModels {
 }
 
 export interface CopilotPromptConfigInput {
-  frequencyPenalty: InputMaybe<Scalars['Float']['input']>;
-  jsonMode: InputMaybe<Scalars['Boolean']['input']>;
-  presencePenalty: InputMaybe<Scalars['Float']['input']>;
-  temperature: InputMaybe<Scalars['Float']['input']>;
-  topP: InputMaybe<Scalars['Float']['input']>;
+  frequencyPenalty?: InputMaybe<Scalars['Float']['input']>;
+  jsonMode?: InputMaybe<Scalars['Boolean']['input']>;
+  presencePenalty?: InputMaybe<Scalars['Float']['input']>;
+  temperature?: InputMaybe<Scalars['Float']['input']>;
+  topP?: InputMaybe<Scalars['Float']['input']>;
 }
 
 export interface CopilotPromptConfigType {
@@ -129,7 +129,7 @@ export interface CopilotPromptConfigType {
 
 export interface CopilotPromptMessageInput {
   content: Scalars['String']['input'];
-  params: InputMaybe<Scalars['JSON']['input']>;
+  params?: InputMaybe<Scalars['JSON']['input']>;
   role: CopilotPromptMessageRole;
 }
 
@@ -174,10 +174,10 @@ export interface CopilotQuota {
 }
 
 export interface CreateChatMessageInput {
-  attachments: InputMaybe<Array<Scalars['String']['input']>>;
-  blobs: InputMaybe<Array<Scalars['Upload']['input']>>;
-  content: InputMaybe<Scalars['String']['input']>;
-  params: InputMaybe<Scalars['JSON']['input']>;
+  attachments?: InputMaybe<Array<Scalars['String']['input']>>;
+  blobs?: InputMaybe<Array<Scalars['Upload']['input']>>;
+  content?: InputMaybe<Scalars['String']['input']>;
+  params?: InputMaybe<Scalars['JSON']['input']>;
   sessionId: Scalars['String']['input'];
 }
 
@@ -189,17 +189,19 @@ export interface CreateChatSessionInput {
 }
 
 export interface CreateCheckoutSessionInput {
-  coupon: InputMaybe<Scalars['String']['input']>;
-  idempotencyKey: InputMaybe<Scalars['String']['input']>;
-  plan: InputMaybe<SubscriptionPlan>;
-  recurring: InputMaybe<SubscriptionRecurring>;
+  coupon?: InputMaybe<Scalars['String']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
+  plan?: InputMaybe<SubscriptionPlan>;
+  recurring?: InputMaybe<SubscriptionRecurring>;
   successCallbackLink: Scalars['String']['input'];
-  variant: InputMaybe<SubscriptionVariant>;
+  variant?: InputMaybe<SubscriptionVariant>;
+  /** The workspace id for workspace subscription */
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface CreateCopilotPromptInput {
-  action: InputMaybe<Scalars['String']['input']>;
-  config: InputMaybe<CopilotPromptConfigInput>;
+  action?: InputMaybe<Scalars['String']['input']>;
+  config?: InputMaybe<CopilotPromptConfigInput>;
   messages: Array<CopilotPromptMessageInput>;
   model: CopilotModels;
   name: Scalars['String']['input'];
@@ -207,7 +209,7 @@ export interface CreateCopilotPromptInput {
 
 export interface CreateUserInput {
   email: Scalars['String']['input'];
-  name: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface CredentialsRequirementType {
@@ -347,6 +349,7 @@ export enum ErrorNames {
   SUBSCRIPTION_ALREADY_EXISTS = 'SUBSCRIPTION_ALREADY_EXISTS',
   SUBSCRIPTION_EXPIRED = 'SUBSCRIPTION_EXPIRED',
   SUBSCRIPTION_HAS_BEEN_CANCELED = 'SUBSCRIPTION_HAS_BEEN_CANCELED',
+  SUBSCRIPTION_HAS_NOT_BEEN_CANCELED = 'SUBSCRIPTION_HAS_NOT_BEEN_CANCELED',
   SUBSCRIPTION_NOT_EXISTS = 'SUBSCRIPTION_NOT_EXISTS',
   SUBSCRIPTION_PLAN_NOT_FOUND = 'SUBSCRIPTION_PLAN_NOT_FOUND',
   TOO_MANY_REQUEST = 'TOO_MANY_REQUEST',
@@ -355,6 +358,8 @@ export enum ErrorNames {
   USER_AVATAR_NOT_FOUND = 'USER_AVATAR_NOT_FOUND',
   USER_NOT_FOUND = 'USER_NOT_FOUND',
   VERSION_REJECTED = 'VERSION_REJECTED',
+  WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION = 'WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION',
+  WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION = 'WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION',
   WRONG_SIGN_IN_CREDENTIALS = 'WRONG_SIGN_IN_CREDENTIALS',
   WRONG_SIGN_IN_METHOD = 'WRONG_SIGN_IN_METHOD',
 }
@@ -485,15 +490,15 @@ export interface LimitedUserType {
 }
 
 export interface ListUserInput {
-  first: InputMaybe<Scalars['Int']['input']>;
-  skip: InputMaybe<Scalars['Int']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
 }
 
 export interface ManageUserInput {
   /** User email */
-  email: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
   /** User name */
-  name: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MissingOauthQueryParameterDataType {
@@ -575,7 +580,7 @@ export interface Mutation {
 
 export interface MutationAcceptInviteByIdArgs {
   inviteId: Scalars['String']['input'];
-  sendAcceptMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendAcceptMail?: InputMaybe<Scalars['Boolean']['input']>;
   workspaceId: Scalars['String']['input'];
 }
 
@@ -585,8 +590,9 @@ export interface MutationAddWorkspaceFeatureArgs {
 }
 
 export interface MutationCancelSubscriptionArgs {
-  idempotencyKey: InputMaybe<Scalars['String']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationChangeEmailArgs {
@@ -597,7 +603,7 @@ export interface MutationChangeEmailArgs {
 export interface MutationChangePasswordArgs {
   newPassword: Scalars['String']['input'];
   token: Scalars['String']['input'];
-  userId: InputMaybe<Scalars['String']['input']>;
+  userId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationCleanupCopilotSessionArgs {
@@ -630,7 +636,7 @@ export interface MutationCreateUserArgs {
 }
 
 export interface MutationCreateWorkspaceArgs {
-  init: InputMaybe<Scalars['Upload']['input']>;
+  init?: InputMaybe<Scalars['Upload']['input']>;
 }
 
 export interface MutationDeleteBlobArgs {
@@ -653,12 +659,12 @@ export interface MutationForkCopilotSessionArgs {
 export interface MutationInviteArgs {
   email: Scalars['String']['input'];
   permission: Permission;
-  sendInviteMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendInviteMail?: InputMaybe<Scalars['Boolean']['input']>;
   workspaceId: Scalars['String']['input'];
 }
 
 export interface MutationLeaveWorkspaceArgs {
-  sendLeaveMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendLeaveMail?: InputMaybe<Scalars['Boolean']['input']>;
   workspaceId: Scalars['String']['input'];
   workspaceName: Scalars['String']['input'];
 }
@@ -681,8 +687,9 @@ export interface MutationRemoveWorkspaceFeatureArgs {
 }
 
 export interface MutationResumeSubscriptionArgs {
-  idempotencyKey: InputMaybe<Scalars['String']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationRevokeArgs {
@@ -702,17 +709,17 @@ export interface MutationRevokePublicPageArgs {
 
 export interface MutationSendChangeEmailArgs {
   callbackUrl: Scalars['String']['input'];
-  email: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationSendChangePasswordEmailArgs {
   callbackUrl: Scalars['String']['input'];
-  email: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationSendSetPasswordEmailArgs {
   callbackUrl: Scalars['String']['input'];
-  email: InputMaybe<Scalars['String']['input']>;
+  email?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationSendVerifyChangeEmailArgs {
@@ -760,9 +767,10 @@ export interface MutationUpdateRuntimeConfigsArgs {
 }
 
 export interface MutationUpdateSubscriptionRecurringArgs {
-  idempotencyKey: InputMaybe<Scalars['String']['input']>;
+  idempotencyKey?: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
   recurring: SubscriptionRecurring;
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface MutationUpdateUserArgs {
@@ -839,7 +847,6 @@ export interface Query {
   /** List all copilot prompts */
   listCopilotPrompts: Array<CopilotPromptType>;
   listWorkspaceFeatures: Array<WorkspaceType>;
-  /** @deprecated use `userPrices` instead */
   prices: Array<SubscriptionPrice>;
   /** server config */
   serverConfig: ServerConfigType;
@@ -887,6 +894,10 @@ export interface QueryListWorkspaceFeaturesArgs {
   feature: FeatureType;
 }
 
+export interface QueryPricesArgs {
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
+}
+
 export interface QueryUserArgs {
   email: Scalars['String']['input'];
 }
@@ -908,13 +919,13 @@ export interface QueryWorkspaceArgs {
 }
 
 export interface QueryChatHistoriesInput {
-  action: InputMaybe<Scalars['Boolean']['input']>;
-  fork: InputMaybe<Scalars['Boolean']['input']>;
-  limit: InputMaybe<Scalars['Int']['input']>;
-  messageOrder: InputMaybe<ChatHistoryOrder>;
-  sessionId: InputMaybe<Scalars['String']['input']>;
-  sessionOrder: InputMaybe<ChatHistoryOrder>;
-  skip: InputMaybe<Scalars['Int']['input']>;
+  action?: InputMaybe<Scalars['Boolean']['input']>;
+  fork?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  messageOrder?: InputMaybe<ChatHistoryOrder>;
+  sessionId?: InputMaybe<Scalars['String']['input']>;
+  sessionOrder?: InputMaybe<ChatHistoryOrder>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
 }
 
 export interface QuotaQueryType {
@@ -1119,15 +1130,15 @@ export interface UnknownOauthProviderDataType {
 
 export interface UpdateUserInput {
   /** User name */
-  name: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface UpdateWorkspaceInput {
   /** Enable url previous when sharing */
-  enableUrlPreview: InputMaybe<Scalars['Boolean']['input']>;
+  enableUrlPreview?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['ID']['input'];
   /** is Public workspace */
-  public: InputMaybe<Scalars['Boolean']['input']>;
+  public?: InputMaybe<Scalars['Boolean']['input']>;
 }
 
 export type UserOrLimitedUser = LimitedUserType | UserType;
@@ -1182,11 +1193,11 @@ export interface UserType {
 }
 
 export interface UserTypeCopilotArgs {
-  workspaceId: InputMaybe<Scalars['String']['input']>;
+  workspaceId?: InputMaybe<Scalars['String']['input']>;
 }
 
 export interface UserTypeInvoicesArgs {
-  skip: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
 }
 
@@ -1258,17 +1269,19 @@ export interface WorkspaceType {
    * @deprecated use WorkspaceType.publicPages
    */
   sharedPages: Array<Scalars['String']['output']>;
+  /** The team subscription of the workspace, if exists. */
+  subscription: Maybe<SubscriptionType>;
 }
 
 export interface WorkspaceTypeHistoriesArgs {
-  before: InputMaybe<Scalars['DateTime']['input']>;
+  before?: InputMaybe<Scalars['DateTime']['input']>;
   guid: Scalars['String']['input'];
-  take: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
 }
 
 export interface WorkspaceTypeMembersArgs {
-  skip: InputMaybe<Scalars['Int']['input']>;
-  take: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
 }
 
 export interface WorkspaceTypePageMetaArgs {
@@ -1513,8 +1526,8 @@ export type PasswordLimitsFragment = {
 
 export type GetCopilotHistoriesQueryVariables = Exact<{
   workspaceId: Scalars['String']['input'];
-  docId: InputMaybe<Scalars['String']['input']>;
-  options: InputMaybe<QueryChatHistoriesInput>;
+  docId?: InputMaybe<Scalars['String']['input']>;
+  options?: InputMaybe<QueryChatHistoriesInput>;
 }>;
 
 export type GetCopilotHistoriesQuery = {
@@ -1544,8 +1557,8 @@ export type GetCopilotHistoriesQuery = {
 
 export type GetCopilotHistoryIdsQueryVariables = Exact<{
   workspaceId: Scalars['String']['input'];
-  docId: InputMaybe<Scalars['String']['input']>;
-  options: InputMaybe<QueryChatHistoriesInput>;
+  docId?: InputMaybe<Scalars['String']['input']>;
+  options?: InputMaybe<QueryChatHistoriesInput>;
 }>;
 
 export type GetCopilotHistoryIdsQuery = {
@@ -1915,8 +1928,8 @@ export type GetWorkspacesQuery = {
 export type ListHistoryQueryVariables = Exact<{
   workspaceId: Scalars['String']['input'];
   pageDocId: Scalars['String']['input'];
-  take: InputMaybe<Scalars['Int']['input']>;
-  before: InputMaybe<Scalars['DateTime']['input']>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+  before?: InputMaybe<Scalars['DateTime']['input']>;
 }>;
 
 export type ListHistoryQuery = {
@@ -1970,7 +1983,7 @@ export type InvoicesQuery = {
 export type LeaveWorkspaceMutationVariables = Exact<{
   workspaceId: Scalars['String']['input'];
   workspaceName: Scalars['String']['input'];
-  sendLeaveMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendLeaveMail?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 export type LeaveWorkspaceMutation = {
@@ -2422,7 +2435,7 @@ export type InviteByEmailMutationVariables = Exact<{
   workspaceId: Scalars['String']['input'];
   email: Scalars['String']['input'];
   permission: Permission;
-  sendInviteMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendInviteMail?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 export type InviteByEmailMutation = { __typename?: 'Mutation'; invite: string };
@@ -2430,7 +2443,7 @@ export type InviteByEmailMutation = { __typename?: 'Mutation'; invite: string };
 export type AcceptInviteByInviteIdMutationVariables = Exact<{
   workspaceId: Scalars['String']['input'];
   inviteId: Scalars['String']['input'];
-  sendAcceptMail: InputMaybe<Scalars['Boolean']['input']>;
+  sendAcceptMail?: InputMaybe<Scalars['Boolean']['input']>;
 }>;
 
 export type AcceptInviteByInviteIdMutation = {

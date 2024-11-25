@@ -101,7 +101,7 @@ export class ScheduleManager {
       items: [
         {
           price: this.currentPhase.items[0].price as string,
-          quantity: 1,
+          quantity: this.currentPhase.items[0].quantity,
         },
       ],
       coupon: (this.currentPhase.coupon as string | null) ?? undefined,
@@ -143,10 +143,9 @@ export class ScheduleManager {
         items: [
           {
             price: this.currentPhase.items[0].price as string,
-            quantity: 1,
+            quantity: this.currentPhase.items[0].quantity,
           },
         ],
-        coupon: (this.currentPhase.coupon as string | null) ?? undefined,
         start_date: this.currentPhase.start_date,
         end_date: this.currentPhase.end_date,
         metadata: {
@@ -161,7 +160,7 @@ export class ScheduleManager {
         items: [
           {
             price: this.currentPhase.metadata.next_price,
-            quantity: 1,
+            quantity: this.currentPhase.items[0].quantity,
           },
         ],
         coupon: this.currentPhase.metadata.next_coupon || undefined,
@@ -212,6 +211,7 @@ export class ScheduleManager {
               items: [
                 {
                   price: this.currentPhase.items[0].price as string,
+                  quantity: this.currentPhase.items[0].quantity,
                 },
               ],
               start_date: this.currentPhase.start_date,
@@ -221,6 +221,7 @@ export class ScheduleManager {
               items: [
                 {
                   price: price,
+                  quantity: this.currentPhase.items[0].quantity,
                 },
               ],
             },
@@ -229,5 +230,32 @@ export class ScheduleManager {
         { idempotencyKey }
       );
     }
+  }
+
+  async updateQuantity(quantity: number, idempotencyKey?: string) {
+    if (!this._schedule) {
+      throw new Error('No schedule');
+    }
+
+    if (!this.isActive || !this.currentPhase) {
+      throw new Error('Unexpected subscription schedule status');
+    }
+
+    await this.stripe.subscriptionSchedules.update(
+      this._schedule.id,
+      {
+        phases: this._schedule.phases.map(phase => ({
+          items: [
+            {
+              price: phase.items[0].price as string,
+              quantity,
+            },
+          ],
+          start_date: phase.start_date,
+          end_date: phase.end_date,
+        })),
+      },
+      { idempotencyKey }
+    );
   }
 }

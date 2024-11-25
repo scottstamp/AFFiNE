@@ -37,4 +37,4 @@ import {
 })
 export class WorkspaceModule {}
 
-export type { InvitationType, WorkspaceType } from './types';
+export { InvitationType, WorkspaceType } from './types';

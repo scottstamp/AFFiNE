@@ -18,8 +18,14 @@ import { groupBy } from 'lodash-es';
 
 import { CurrentUser, Public } from '../../core/auth';
 import { UserType } from '../../core/user';
-import { AccessDenied, FailedToCheckout, URLHelper } from '../../fundamentals';
-import { Invoice, Subscription } from './manager';
+import { WorkspaceType } from '../../core/workspaces';
+import {
+  AccessDenied,
+  FailedToCheckout,
+  URLHelper,
+  WorkspaceIdRequiredToUpdateTeamSubscription,
+} from '../../fundamentals';
+import { Invoice, Subscription, WorkspaceSubscriptionManager } from './manager';
 import { SubscriptionService } from './service';
 import {
   InvoiceStatus,
@@ -57,7 +63,7 @@ class SubscriptionPrice {
 }
 
 @ObjectType()
-export class SubscriptionType implements Subscription {
+export class SubscriptionType implements Partial<Subscription> {
   @Field(() => SubscriptionPlan, {
     description:
       "The 'Free' plan just exists to be a placeholder and for the type convenience of frontend.\nThere won't actually be a subscription with plan 'Free'",
@@ -107,7 +113,7 @@ export class SubscriptionType implements Subscription {
 }
 
 @ObjectType()
-export class InvoiceType implements Invoice {
+export class InvoiceType implements Partial<Invoice> {
   @Field()
   currency!: string;
 
@@ -138,7 +144,7 @@ export class InvoiceType implements Invoice {
     nullable: true,
     deprecationReason: 'removed',
   })
-  stripeInvoiceId!: string | null;
+  stripeInvoiceId?: string;
 
   @Field(() => SubscriptionPlan, {
     nullable: true,
@@ -170,7 +176,13 @@ class CreateCheckoutSessionInput {
   @Field(() => SubscriptionVariant, {
     nullable: true,
   })
-  variant?: SubscriptionVariant;
+  variant!: SubscriptionVariant | null;
+
+  @Field(() => String, {
+    nullable: true,
+    description: 'The workspace id for workspace subscription',
+  })
+  workspaceId!: string | null;
 
   @Field(() => String, { nullable: true })
   coupon!: string | null;
@@ -195,9 +207,15 @@ export class SubscriptionResolver {
   @Public()
   @Query(() => [SubscriptionPrice])
   async prices(
-    @CurrentUser() user?: CurrentUser
+    @CurrentUser() user?: CurrentUser,
+    @Args('workspaceId', {
+      type: () => String,
+      nullable: true,
+      description: 'Get prices for workspace, if exists.',
+    })
+    workspaceId?: string
   ): Promise<SubscriptionPrice[]> {
-    const prices = await this.service.listPrices(user);
+    const prices = await this.service.listPrices(user, workspaceId);
 
     const group = groupBy(prices, price => {
       return price.lookupKey.plan;
@@ -232,7 +250,11 @@ export class SubscriptionResolver {
     }
 
     // extend it when new plans are added
-    const fixedPlans = [SubscriptionPlan.Pro, SubscriptionPlan.AI];
+    const fixedPlans = [
+      SubscriptionPlan.Pro,
+      SubscriptionPlan.AI,
+      SubscriptionPlan.Team,
+    ];
 
     return fixedPlans.reduce((prices, plan) => {
       const price = findPrice(plan);
@@ -260,6 +282,7 @@ export class SubscriptionResolver {
   ) {
     const session = await this.service.checkout({
       user,
+      workspaceId: input.workspaceId,
       lookupKey: {
         plan: input.plan,
         recurring: input.recurring,
@@ -294,6 +317,8 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
+    @Args({ name: 'workspaceId', type: () => String, nullable: true })
+    workspaceId: string | null,
     @Headers('idempotency-key') idempotencyKey?: string,
     @Args('idempotencyKey', {
       type: () => String,
@@ -302,6 +327,14 @@ export class SubscriptionResolver {
     })
     _?: string
   ) {
+    if (plan === SubscriptionPlan.Team) {
+      if (!workspaceId) {
+        throw new WorkspaceIdRequiredToUpdateTeamSubscription();
+      }
+
+      return this.service.cancelSubscription(workspaceId, plan, idempotencyKey);
+    }
+
     return this.service.cancelSubscription(user.id, plan, idempotencyKey);
   }
 
@@ -315,6 +348,8 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
+    @Args({ name: 'workspaceId', type: () => String, nullable: true })
+    workspaceId: string | null,
     @Headers('idempotency-key') idempotencyKey?: string,
     @Args('idempotencyKey', {
       type: () => String,
@@ -323,14 +358,20 @@ export class SubscriptionResolver {
     })
     _?: string
   ) {
+    if (plan === SubscriptionPlan.Team) {
+      if (!workspaceId) {
+        throw new WorkspaceIdRequiredToUpdateTeamSubscription();
+      }
+
+      return this.service.resumeSubscription(workspaceId, plan, idempotencyKey);
+    }
+
     return this.service.resumeSubscription(user.id, plan, idempotencyKey);
   }
 
   @Mutation(() => SubscriptionType)
   async updateSubscriptionRecurring(
     @CurrentUser() user: CurrentUser,
-    @Args({ name: 'recurring', type: () => SubscriptionRecurring })
-    recurring: SubscriptionRecurring,
     @Args({
       name: 'plan',
       type: () => SubscriptionPlan,
@@ -338,6 +379,10 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
+    @Args({ name: 'workspaceId', type: () => String, nullable: true })
+    workspaceId: string | null,
+    @Args({ name: 'recurring', type: () => SubscriptionRecurring })
+    recurring: SubscriptionRecurring,
     @Headers('idempotency-key') idempotencyKey?: string,
     @Args('idempotencyKey', {
       type: () => String,
@@ -346,6 +391,19 @@ export class SubscriptionResolver {
     })
     _?: string
   ) {
+    if (plan === SubscriptionPlan.Team) {
+      if (!workspaceId) {
+        throw new WorkspaceIdRequiredToUpdateTeamSubscription();
+      }
+
+      return this.service.updateSubscriptionRecurring(
+        workspaceId,
+        plan,
+        recurring,
+        idempotencyKey
+      );
+    }
+
     return this.service.updateSubscriptionRecurring(
       user.id,
       plan,
@@ -411,5 +469,18 @@ export class UserSubscriptionResolver {
         id: 'desc',
       },
     });
+  }
+}
+
+@Resolver(() => WorkspaceType)
+export class WorkspaceSubscriptionResolver {
+  constructor(private readonly service: WorkspaceSubscriptionManager) {}
+
+  @ResolveField(() => SubscriptionType, {
+    nullable: true,
+    description: 'The team subscription of the workspace, if exists.',
+  })
+  async subscription(@Parent() workspace: WorkspaceType) {
+    return this.service.getSubscription(workspace.id);
   }
 }

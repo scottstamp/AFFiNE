@@ -1,4 +1,4 @@
-import type { User } from '@prisma/client';
+import type { User, Workspace } from '@prisma/client';
 import Stripe from 'stripe';
 
 import type { Payload } from '../../fundamentals/event/def';
@@ -64,12 +64,31 @@ declare module '../../fundamentals/event/def' {
       }>;
     };
   }
+
+  interface WorkspaceEvents {
+    subscription: {
+      activated: Payload<{
+        workspaceId: Workspace['id'];
+        plan: SubscriptionPlan;
+        recurring: SubscriptionRecurring;
+        quantity: number;
+      }>;
+      canceled: Payload<{
+        workspaceId: Workspace['id'];
+        plan: SubscriptionPlan;
+        recurring: SubscriptionRecurring;
+      }>;
+    };
+    members: {
+      updated: Payload<{ workspaceId: Workspace['id']; count: number }>;
+    };
+  }
 }
 
 export interface LookupKey {
   plan: SubscriptionPlan;
   recurring: SubscriptionRecurring;
-  variant?: SubscriptionVariant;
+  variant: SubscriptionVariant | null;
 }
 
 export interface KnownStripeInvoice {
@@ -77,6 +96,13 @@ export interface KnownStripeInvoice {
    * User in AFFiNE system.
    */
   userId: string;
+
+  /**
+   * Workspace in AFFiNE system.
+   *
+   * exists when the invoice is for a workspace.
+   */
+  workspaceId?: string;
 
   /**
    * The lookup key of the price that the invoice is for.
@@ -96,6 +122,13 @@ export interface KnownStripeSubscription {
   userId: string;
 
   /**
+   * Workspace in AFFiNE system.
+   *
+   * exists when the subscription is for a workspace.
+   */
+  workspaceId?: string;
+
+  /**
    * The lookup key of the price that the invoice is for.
    */
   lookupKey: LookupKey;
@@ -104,6 +137,11 @@ export interface KnownStripeSubscription {
    * The subscription object from Stripe.
    */
   stripeSubscription: Stripe.Subscription;
+
+  /**
+   * The quantity of the subscription items.
+   */
+  quantity: number;
 }
 
 export interface KnownStripePrice {
@@ -167,7 +205,7 @@ export function decodeLookupKey(key: string): LookupKey | null {
   return {
     plan: plan as SubscriptionPlan,
     recurring: recurring as SubscriptionRecurring,
-    variant: variant as SubscriptionVariant | undefined,
+    variant: variant as SubscriptionVariant,
   };
 }
 

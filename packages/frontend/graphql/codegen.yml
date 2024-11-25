@@ -5,7 +5,11 @@ config:
   strict: true
   maybeValue: T | null
   declarationKind: interface
-  avoidOptionals: true
+  avoidOptionals:
+    field: true
+    inputValue: false
+    object: false
+    defaultValue: false
   preResolveTypes: true
   namingConvention:
     enumValues: keep

@@ -146,6 +146,9 @@ input CreateCheckoutSessionInput {
   recurring: SubscriptionRecurring = Yearly
   successCallbackLink: String!
   variant: SubscriptionVariant
+
+  """The workspace id for workspace subscription"""
+  workspaceId: String
 }
 
 input CreateCopilotPromptInput {
@@ -273,6 +276,7 @@ enum ErrorNames {
   SUBSCRIPTION_ALREADY_EXISTS
   SUBSCRIPTION_EXPIRED
   SUBSCRIPTION_HAS_BEEN_CANCELED
+  SUBSCRIPTION_HAS_NOT_BEEN_CANCELED
   SUBSCRIPTION_NOT_EXISTS
   SUBSCRIPTION_PLAN_NOT_FOUND
   TOO_MANY_REQUEST
@@ -281,6 +285,8 @@ enum ErrorNames {
   USER_AVATAR_NOT_FOUND
   USER_NOT_FOUND
   VERSION_REJECTED
+  WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION
+  WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION
   WRONG_SIGN_IN_CREDENTIALS
   WRONG_SIGN_IN_METHOD
 }
@@ -440,7 +446,7 @@ type MissingOauthQueryParameterDataType {
 type Mutation {
   acceptInviteById(inviteId: String!, sendAcceptMail: Boolean, workspaceId: String!): Boolean!
   addWorkspaceFeature(feature: FeatureType!, workspaceId: String!): Int!
-  cancelSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro): SubscriptionType!
+  cancelSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, workspaceId: String): SubscriptionType!
   changeEmail(email: String!, token: String!): UserType!
   changePassword(newPassword: String!, token: String!, userId: String): Boolean!
 
@@ -487,7 +493,7 @@ type Mutation {
   """Remove user avatar"""
   removeAvatar: RemoveAvatar!
   removeWorkspaceFeature(feature: FeatureType!, workspaceId: String!): Int!
-  resumeSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro): SubscriptionType!
+  resumeSubscription(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, workspaceId: String): SubscriptionType!
   revoke(userId: String!, workspaceId: String!): Boolean!
   revokePage(pageId: String!, workspaceId: String!): Boolean! @deprecated(reason: "use revokePublicPage")
   revokePublicPage(pageId: String!, workspaceId: String!): WorkspacePage!
@@ -509,7 +515,7 @@ type Mutation {
 
   """update multiple server runtime configurable settings"""
   updateRuntimeConfigs(updates: JSONObject!): [ServerRuntimeConfigType!]!
-  updateSubscriptionRecurring(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, recurring: SubscriptionRecurring!): SubscriptionType!
+  updateSubscriptionRecurring(idempotencyKey: String @deprecated(reason: "use header `Idempotency-Key`"), plan: SubscriptionPlan = Pro, recurring: SubscriptionRecurring!, workspaceId: String): SubscriptionType!
 
   """Update a user"""
   updateUser(id: String!, input: ManageUserInput!): UserType!
@@ -574,7 +580,10 @@ type Query {
   """List all copilot prompts"""
   listCopilotPrompts: [CopilotPromptType!]!
   listWorkspaceFeatures(feature: FeatureType!): [WorkspaceType!]!
-  prices: [SubscriptionPrice!]!
+  prices(
+    """Get prices for workspace, if exists."""
+    workspaceId: String
+  ): [SubscriptionPrice!]!
 
   """server config"""
   serverConfig: ServerConfigType!
@@ -954,6 +963,9 @@ type WorkspaceType {
 
   """Shared pages of workspace"""
   sharedPages: [String!]! @deprecated(reason: "use WorkspaceType.publicPages")
+
+  """The team subscription of the workspace, if exists."""
+  subscription: SubscriptionType
 }
 
 type tokenType {

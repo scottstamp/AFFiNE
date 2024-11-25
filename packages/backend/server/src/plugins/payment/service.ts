@@ -1,10 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type {
-  User,
-  UserInvoice,
-  UserStripeCustomer,
-  UserSubscription,
-} from '@prisma/client';
+import type { User, UserStripeCustomer } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 
@@ -16,17 +11,26 @@ import {
   CantUpdateOnetimePaymentSubscription,
   Config,
   CustomerPortalCreateFailed,
+  type EventPayload,
   InternalServerError,
   OnEvent,
   SameSubscriptionRecurring,
   SubscriptionAlreadyExists,
   SubscriptionExpired,
   SubscriptionHasBeenCanceled,
+  SubscriptionHasNotBeenCanceled,
   SubscriptionNotExists,
   SubscriptionPlanNotFound,
   UserNotFound,
+  WorkspaceIdRequiredForTeamSubscription,
 } from '../../fundamentals';
-import { UserSubscriptionManager } from './manager';
+import {
+  Invoice,
+  Subscription,
+  SubscriptionManager,
+  UserSubscriptionManager,
+  WorkspaceSubscriptionManager,
+} from './manager';
 import { ScheduleManager } from './schedule';
 import {
   encodeLookupKey,
@@ -52,28 +56,34 @@ export class SubscriptionService {
     private readonly db: PrismaClient,
     private readonly feature: FeatureManagementService,
     private readonly user: UserService,
-    private readonly userManager: UserSubscriptionManager
+    private readonly userManager: UserSubscriptionManager,
+    private readonly workspaceManager: WorkspaceSubscriptionManager
   ) {}
 
-  async listPrices(user?: CurrentUser): Promise<KnownStripePrice[]> {
+  private select(plan: SubscriptionPlan): SubscriptionManager {
+    return plan === SubscriptionPlan.Team
+      ? this.workspaceManager
+      : this.userManager;
+  }
+
+  async listPrices(
+    user?: CurrentUser,
+    workspaceId?: string
+  ): Promise<KnownStripePrice[]> {
+    const prices = await this.listStripePrices();
+
     const customer = user ? await this.getOrCreateCustomer(user) : undefined;
 
-    // TODO(@forehalo): cache
-    const prices = await this.stripe.prices.list({
-      active: true,
-      limit: 100,
-    });
+    if (workspaceId) {
+      return this.workspaceManager.filterPrices(prices, customer);
+    }
 
-    return this.userManager.filterPrices(
-      prices.data
-        .map(price => this.parseStripePrice(price))
-        .filter(Boolean) as KnownStripePrice[],
-      customer
-    );
+    return this.userManager.filterPrices(prices, customer);
   }
 
   async checkout({
     user,
+    workspaceId,
     lookupKey,
     promotionCode,
     redirectUrl,
@@ -81,8 +91,9 @@ export class SubscriptionService {
   }: {
     user: CurrentUser;
     lookupKey: LookupKey;
-    promotionCode?: string | null;
     redirectUrl: string;
+    workspaceId?: string | null;
+    promotionCode?: string | null;
     idempotencyKey?: string;
   }) {
     if (
@@ -93,8 +104,16 @@ export class SubscriptionService {
       throw new ActionForbidden();
     }
 
-    const currentSubscription = await this.userManager.getSubscription(
-      user.id,
+    const manager = this.select(lookupKey.plan);
+    const targetId =
+      lookupKey.plan === SubscriptionPlan.Team ? workspaceId : user.id;
+
+    if (!targetId) {
+      throw new WorkspaceIdRequiredForTeamSubscription();
+    }
+
+    const currentSubscription = await manager.getSubscription(
+      targetId,
       lookupKey.plan
     );
 
@@ -119,11 +138,11 @@ export class SubscriptionService {
     const price = await this.getPrice(lookupKey);
     const customer = await this.getOrCreateCustomer(user);
 
-    const priceAndAutoCoupon = price
-      ? await this.userManager.validatePrice(price, customer)
+    const checkoutParams = price
+      ? await manager.finalizeCheckoutParams(customer, targetId, price)
       : null;
 
-    if (!priceAndAutoCoupon) {
+    if (!checkoutParams) {
       throw new SubscriptionPlanNotFound({
         plan: lookupKey.plan,
         recurring: lookupKey.recurring,
@@ -132,8 +151,8 @@ export class SubscriptionService {
 
     let discounts: Stripe.Checkout.SessionCreateParams['discounts'] = [];
 
-    if (priceAndAutoCoupon.coupon) {
-      discounts = [{ coupon: priceAndAutoCoupon.coupon }];
+    if (checkoutParams.coupon) {
+      discounts = [{ coupon: checkoutParams.coupon }];
     } else if (promotionCode) {
       const coupon = await this.getCouponFromPromotionCode(
         promotionCode,
@@ -144,12 +163,12 @@ export class SubscriptionService {
       }
     }
 
-    return await this.stripe.checkout.sessions.create(
+    return this.stripe.checkout.sessions.create(
       {
         line_items: [
           {
-            price: priceAndAutoCoupon.price.price.id,
-            quantity: 1,
+            price: checkoutParams.price,
+            quantity: checkoutParams.quantity,
           },
         ],
         tax_id_collection: {
@@ -175,17 +194,24 @@ export class SubscriptionService {
           address: 'auto',
           name: 'auto',
         },
+        subscription_data: {
+          metadata:
+            lookupKey.plan === SubscriptionPlan.Team
+              ? { workspaceId: targetId }
+              : { userId: targetId },
+        },
       },
       { idempotencyKey }
     );
   }
 
   async cancelSubscription(
-    userId: string,
+    targetId: string,
     plan: SubscriptionPlan,
     idempotencyKey?: string
-  ): Promise<UserSubscription> {
-    const subscription = await this.userManager.getSubscription(userId, plan);
+  ): Promise<Subscription> {
+    const manager = this.select(plan);
+    const subscription = await manager.getSubscription(targetId, plan);
 
     if (!subscription) {
       throw new SubscriptionNotExists({ plan });
@@ -202,7 +228,7 @@ export class SubscriptionService {
     }
 
     // update the subscription in db optimistically
-    const newSubscription = this.userManager.cancelSubscription(subscription);
+    const newSubscription = manager.cancelSubscription(subscription);
 
     // should release the schedule first
     if (subscription.stripeScheduleId) {
@@ -224,18 +250,19 @@ export class SubscriptionService {
   }
 
   async resumeSubscription(
-    userId: string,
+    targetId: string,
     plan: SubscriptionPlan,
     idempotencyKey?: string
-  ): Promise<UserSubscription> {
-    const subscription = await this.userManager.getSubscription(userId, plan);
+  ): Promise<Subscription> {
+    const manager = this.select(plan);
+    const subscription = await manager.getSubscription(targetId, plan);
 
     if (!subscription) {
       throw new SubscriptionNotExists({ plan });
     }
 
     if (!subscription.canceledAt) {
-      throw new SubscriptionHasBeenCanceled();
+      throw new SubscriptionHasNotBeenCanceled();
     }
 
     if (!subscription.stripeSubscriptionId || !subscription.end) {
@@ -249,8 +276,7 @@ export class SubscriptionService {
     }
 
     // update the subscription in db optimistically
-    const newSubscription =
-      await this.userManager.resumeSubscription(subscription);
+    const newSubscription = await manager.resumeSubscription(subscription);
 
     if (subscription.stripeScheduleId) {
       const manager = await this.scheduleManager.fromSchedule(
@@ -269,12 +295,13 @@ export class SubscriptionService {
   }
 
   async updateSubscriptionRecurring(
-    userId: string,
+    targetId: string,
     plan: SubscriptionPlan,
     recurring: SubscriptionRecurring,
     idempotencyKey?: string
-  ): Promise<UserSubscription> {
-    const subscription = await this.userManager.getSubscription(userId, plan);
+  ): Promise<Subscription> {
+    const manager = this.select(plan);
+    const subscription = await manager.getSubscription(targetId, plan);
 
     if (!subscription) {
       throw new SubscriptionNotExists({ plan });
@@ -295,6 +322,7 @@ export class SubscriptionService {
     const price = await this.getPrice({
       plan,
       recurring,
+      variant: null,
     });
 
     if (!price) {
@@ -302,16 +330,16 @@ export class SubscriptionService {
     }
 
     // update the subscription in db optimistically
-    const newSubscription = this.userManager.updateSubscriptionRecurring(
+    const newSubscription = manager.updateSubscriptionRecurring(
       subscription,
       recurring
     );
 
-    const manager = await this.scheduleManager.fromSubscription(
+    const scheduleManager = await this.scheduleManager.fromSubscription(
       subscription.stripeSubscriptionId
     );
 
-    await manager.update(price.price.id, idempotencyKey);
+    await scheduleManager.update(price.price.id, idempotencyKey);
 
     return newSubscription;
   }
@@ -339,14 +367,14 @@ export class SubscriptionService {
     }
   }
 
-  async saveStripeInvoice(stripeInvoice: Stripe.Invoice): Promise<UserInvoice> {
+  async saveStripeInvoice(stripeInvoice: Stripe.Invoice): Promise<Invoice> {
     const knownInvoice = await this.parseStripeInvoice(stripeInvoice);
 
     if (!knownInvoice) {
       throw new InternalServerError('Failed to parse stripe invoice.');
     }
 
-    return this.userManager.saveInvoice(knownInvoice);
+    return this.select(knownInvoice.lookupKey.plan).saveInvoice(knownInvoice);
   }
 
   async saveStripeSubscription(subscription: Stripe.Subscription) {
@@ -360,10 +388,12 @@ export class SubscriptionService {
       subscription.status === SubscriptionStatus.Active ||
       subscription.status === SubscriptionStatus.Trialing;
 
+    const manager = this.select(knownSubscription.lookupKey.plan);
+
     if (!isPlanActive) {
-      await this.userManager.deleteSubscription(knownSubscription);
+      await manager.deleteSubscription(knownSubscription);
     } else {
-      await this.userManager.saveSubscription(knownSubscription);
+      await manager.saveSubscription(knownSubscription);
     }
   }
 
@@ -374,7 +404,8 @@ export class SubscriptionService {
       throw new InternalServerError('Failed to parse stripe subscription.');
     }
 
-    await this.userManager.deleteSubscription(knownSubscription);
+    const manager = this.select(knownSubscription.lookupKey.plan);
+    await manager.deleteSubscription(knownSubscription);
   }
 
   async getOrCreateCustomer(user: CurrentUser): Promise<UserStripeCustomer> {
@@ -467,6 +498,17 @@ export class SubscriptionService {
     return user.id;
   }
 
+  private async listStripePrices(): Promise<KnownStripePrice[]> {
+    const prices = await this.stripe.prices.list({
+      active: true,
+      limit: 100,
+    });
+
+    return prices.data
+      .map(price => this.parseStripePrice(price))
+      .filter(Boolean) as KnownStripePrice[];
+  }
+
   private async getPrice(
     lookupKey: LookupKey
   ): Promise<KnownStripePrice | null> {
@@ -549,6 +591,7 @@ export class SubscriptionService {
       userId: user.id,
       stripeInvoice: invoice,
       lookupKey,
+      workspaceId: invoice.subscription_details?.metadata?.workspaceId,
     };
   }
 
@@ -565,10 +608,14 @@ export class SubscriptionService {
       return null;
     }
 
+    const workspaceId = subscription.metadata.workspaceId;
+
     return {
       userId,
       lookupKey,
       stripeSubscription: subscription,
+      quantity: subscription.items.data[0]?.quantity ?? 1,
+      workspaceId,
     };
   }
 
@@ -581,5 +628,45 @@ export class SubscriptionService {
           price,
         }
       : null;
+  }
+
+  @OnEvent('workspace.members.updated')
+  async onMembersUpdated({
+    workspaceId,
+    count,
+  }: EventPayload<'workspace.members.updated'>) {
+    const subscription =
+      await this.workspaceManager.getSubscription(workspaceId);
+
+    if (!subscription || !subscription.stripeSubscriptionId) {
+      return;
+    }
+    const stripeSubscription = await this.stripe.subscriptions.retrieve(
+      subscription.stripeSubscriptionId
+    );
+
+    const lookupKey =
+      retriveLookupKeyFromStripeSubscription(stripeSubscription);
+
+    await this.stripe.subscriptions.update(stripeSubscription.id, {
+      items: [
+        {
+          id: stripeSubscription.items.data[0].id,
+          quantity: count,
+        },
+      ],
+      payment_behavior: 'pending_if_incomplete',
+      proration_behavior:
+        lookupKey?.recurring === SubscriptionRecurring.Yearly
+          ? 'always_invoice'
+          : 'none',
+    });
+
+    if (subscription.stripeScheduleId) {
+      const schedule = await this.scheduleManager.fromSchedule(
+        subscription.stripeScheduleId
+      );
+      await schedule.updateQuantity(count);
+    }
   }
 }

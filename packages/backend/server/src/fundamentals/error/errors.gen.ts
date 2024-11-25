@@ -357,6 +357,12 @@ export class SubscriptionHasBeenCanceled extends UserFriendlyError {
   }
 }
 
+export class SubscriptionHasNotBeenCanceled extends UserFriendlyError {
+  constructor(message?: string) {
+    super('action_forbidden', 'subscription_has_not_been_canceled', message);
+  }
+}
+
 export class SubscriptionExpired extends UserFriendlyError {
   constructor(message?: string) {
     super('action_forbidden', 'subscription_expired', message);
@@ -393,6 +399,18 @@ export class SubscriptionPlanNotFound extends UserFriendlyError {
 export class CantUpdateOnetimePaymentSubscription extends UserFriendlyError {
   constructor(message?: string) {
     super('action_forbidden', 'cant_update_onetime_payment_subscription', message);
+  }
+}
+
+export class WorkspaceIdRequiredForTeamSubscription extends UserFriendlyError {
+  constructor(message?: string) {
+    super('invalid_input', 'workspace_id_required_for_team_subscription', message);
+  }
+}
+
+export class WorkspaceIdRequiredToUpdateTeamSubscription extends UserFriendlyError {
+  constructor(message?: string) {
+    super('invalid_input', 'workspace_id_required_to_update_team_subscription', message);
   }
 }
 
@@ -587,11 +605,14 @@ export enum ErrorNames {
   SUBSCRIPTION_ALREADY_EXISTS,
   SUBSCRIPTION_NOT_EXISTS,
   SUBSCRIPTION_HAS_BEEN_CANCELED,
+  SUBSCRIPTION_HAS_NOT_BEEN_CANCELED,
   SUBSCRIPTION_EXPIRED,
   SAME_SUBSCRIPTION_RECURRING,
   CUSTOMER_PORTAL_CREATE_FAILED,
   SUBSCRIPTION_PLAN_NOT_FOUND,
   CANT_UPDATE_ONETIME_PAYMENT_SUBSCRIPTION,
+  WORKSPACE_ID_REQUIRED_FOR_TEAM_SUBSCRIPTION,
+  WORKSPACE_ID_REQUIRED_TO_UPDATE_TEAM_SUBSCRIPTION,
   COPILOT_SESSION_NOT_FOUND,
   COPILOT_SESSION_DELETED,
   NO_COPILOT_PROVIDER_AVAILABLE,

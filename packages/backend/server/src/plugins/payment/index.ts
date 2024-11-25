@@ -6,8 +6,15 @@ import { UserModule } from '../../core/user';
 import { Plugin } from '../registry';
 import { StripeWebhookController } from './controller';
 import { SubscriptionCronJobs } from './cron';
-import { UserSubscriptionManager } from './manager';
-import { SubscriptionResolver, UserSubscriptionResolver } from './resolver';
+import {
+  UserSubscriptionManager,
+  WorkspaceSubscriptionManager,
+} from './manager';
+import {
+  SubscriptionResolver,
+  UserSubscriptionResolver,
+  WorkspaceSubscriptionResolver,
+} from './resolver';
 import { SubscriptionService } from './service';
 import { StripeProvider } from './stripe';
 import { StripeWebhook } from './webhook';
@@ -22,7 +29,9 @@ import { StripeWebhook } from './webhook';
     UserSubscriptionResolver,
     StripeWebhook,
     UserSubscriptionManager,
+    WorkspaceSubscriptionManager,
     SubscriptionCronJobs,
+    WorkspaceSubscriptionResolver,
   ],
   controllers: [StripeWebhookController],
   requires: [
