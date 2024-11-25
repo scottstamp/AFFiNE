@@ -11,3 +11,4 @@ export class PolicyModule {}
 
 export { Policy };
 export { type PolicyData, PolicyExecutor, type PolicyType } from './config';
+export { getExecutors, registerExecutor } from './executor';

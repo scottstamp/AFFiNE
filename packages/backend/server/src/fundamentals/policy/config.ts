@@ -1,15 +1,14 @@
-export interface PolicyConfig {
-  earlyAccess: 'earlyAccess';
-  blobStorage: 'blobStorage';
-  // ...
-}
+export interface PolicyConfig {}
 
 export type PolicyType = keyof PolicyConfig;
 
-export type PolicyData = Record<string, any>;
+export type PolicyData<P extends PolicyType> = PolicyConfig[P];
 
 export abstract class PolicyExecutor {
   getPriority = () => 0;
   abstract getPolicies(): PolicyType[]; // get policies that this service can evaluate
-  abstract evaluate(policy: PolicyType, data: PolicyData): boolean; // evaluate the policy
+  abstract evaluate<P extends PolicyType>(
+    policy: P,
+    data: PolicyData<P>
+  ): boolean; // evaluate the policy
 }

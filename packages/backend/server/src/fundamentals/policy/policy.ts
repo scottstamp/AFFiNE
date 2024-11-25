@@ -1,23 +1,12 @@
 import { Injectable } from '@nestjs/common';
 
 import type { PolicyData, PolicyExecutor, PolicyType } from './config';
-
-type PolicyMap = Record<PolicyType, PolicyExecutor[]>;
+import { getExecutors, registerExecutor } from './executor';
 
 @Injectable()
 export class Policy {
-  private readonly policyMap: PolicyMap = {} as PolicyMap;
-
-  constructor() {}
-
-  registerExecutor(executor: PolicyExecutor) {
-    const policies = executor.getPolicies();
-    for (const p of policies) {
-      this.policyMap[p] = this.policyMap[p] || [];
-      this.policyMap[p].push(executor);
-      // sort by priority from height to low
-      this.policyMap[p].sort((a, b) => b.getPriority() - a.getPriority());
-    }
+  register(executor: PolicyExecutor) {
+    registerExecutor(executor);
   }
 
   /**
@@ -26,10 +15,9 @@ export class Policy {
    * @param data the data to evaluate
    * @returns return directly if success, throw new Error if failed
    */
-  evaluate(policy: PolicyType, data: PolicyData) {
-    const policies = this.policyMap[policy];
-    // skip if no policy
-    if (Array.isArray(policies)) {
+  evaluate<P extends PolicyType>(policy: P, data: PolicyData<P>) {
+    const policies = getExecutors(policy);
+    if (policies.length > 0) {
       for (const p of policies) {
         if (p.evaluate(policy, data)) {
           // return if pass one policy
