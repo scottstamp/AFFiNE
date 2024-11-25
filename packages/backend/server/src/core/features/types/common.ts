@@ -1,4 +1,5 @@
 import { registerEnumType } from '@nestjs/graphql';
+import z, { type ZodType } from 'zod';
 
 export enum FeatureType {
   // user feature
@@ -15,3 +16,6 @@ registerEnumType(FeatureType, {
   name: 'FeatureType',
   description: 'The type of workspace feature',
 });
+
+export type PolicyConfigInfer<T extends ZodType<any, any, any>> =
+  z.infer<T>['configs'];
