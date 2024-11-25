@@ -5,7 +5,7 @@ type PoliciesMap = Record<PolicyType, PolicyExecutor[]>;
 const PoliciesMap: PoliciesMap = {} as PoliciesMap;
 
 export function registerExecutor(executor: PolicyExecutor) {
-  const policies = executor.getPolicies();
+  const policies = executor.policies;
   for (const p of policies) {
     const policies = (PoliciesMap[p] = PoliciesMap[p] || []);
     if (!policies.includes(executor)) {

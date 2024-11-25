@@ -499,6 +499,10 @@ export const USER_FRIENDLY_ERRORS = {
   },
 
   // Quota & Limit errors
+  feature_access_denied: {
+    type: 'no_permission',
+    message: () => `You do not have permission to access this feature.`,
+  },
   blob_quota_exceeded: {
     type: 'quota_exceeded',
     message: 'You have exceeded your blob storage quota.',

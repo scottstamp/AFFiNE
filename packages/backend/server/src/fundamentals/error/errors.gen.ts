@@ -476,6 +476,12 @@ export class CopilotProviderSideError extends UserFriendlyError {
   }
 }
 
+export class FeatureAccessDenied extends UserFriendlyError {
+  constructor(message?: string) {
+    super('no_permission', 'feature_access_denied', message);
+  }
+}
+
 export class BlobQuotaExceeded extends UserFriendlyError {
   constructor(message?: string) {
     super('quota_exceeded', 'blob_quota_exceeded', message);
@@ -603,6 +609,7 @@ export enum ErrorNames {
   COPILOT_PROMPT_NOT_FOUND,
   COPILOT_PROMPT_INVALID,
   COPILOT_PROVIDER_SIDE_ERROR,
+  FEATURE_ACCESS_DENIED,
   BLOB_QUOTA_EXCEEDED,
   MEMBER_QUOTA_EXCEEDED,
   COPILOT_QUOTA_EXCEEDED,
