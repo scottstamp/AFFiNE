@@ -29,6 +29,7 @@ export {
   mapSseError,
   OptionalModule,
 } from './nestjs';
+export * from './policy';
 export type { PrismaTransaction } from './prisma';
 export * from './storage';
 export { type StorageProvider, StorageProviderFactory } from './storage';

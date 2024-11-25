@@ -20,7 +20,7 @@ import { StorageModule } from './core/storage';
 import { SyncModule } from './core/sync';
 import { UserModule } from './core/user';
 import { WorkspaceModule } from './core/workspaces';
-import { getOptionalModuleMetadata } from './fundamentals';
+import { getOptionalModuleMetadata, PolicyModule } from './fundamentals';
 import { CacheModule } from './fundamentals/cache';
 import {
   AFFiNEConfig,
@@ -49,6 +49,7 @@ export const FunctionalityModules = [
   PrismaModule,
   MetricsModule,
   RateLimiterModule,
+  PolicyModule,
   MailModule,
   StorageProviderModule,
   HelpersModule,
