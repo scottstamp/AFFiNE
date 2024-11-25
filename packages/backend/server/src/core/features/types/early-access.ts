@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { FeatureType, PolicyConfigInfer } from './common';
+import { FeatureType, UserFeatureCommonParams } from './common';
 
 export const featureEarlyAccess = z.object({
   feature: z.literal(FeatureType.EarlyAccess),
@@ -17,7 +17,7 @@ export const featureAIEarlyAccess = z.object({
 
 declare module '../../../fundamentals/policy/config' {
   export interface PolicyConfig {
-    [FeatureType.EarlyAccess]: PolicyConfigInfer<typeof featureEarlyAccess>;
-    [FeatureType.AIEarlyAccess]: PolicyConfigInfer<typeof featureAIEarlyAccess>;
+    [FeatureType.EarlyAccess]: UserFeatureCommonParams;
+    [FeatureType.AIEarlyAccess]: UserFeatureCommonParams;
   }
 }

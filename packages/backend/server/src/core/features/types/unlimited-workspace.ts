@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { FeatureType, PolicyConfigInfer } from './common';
+import { FeatureType, WorkspaceFeatureCommonParams } from './common';
 
 export const featureUnlimitedWorkspace = z.object({
   feature: z.literal(FeatureType.UnlimitedWorkspace),
@@ -9,8 +9,6 @@ export const featureUnlimitedWorkspace = z.object({
 
 declare module '../../../fundamentals/policy/config' {
   export interface PolicyConfig {
-    [FeatureType.UnlimitedWorkspace]: PolicyConfigInfer<
-      typeof featureUnlimitedWorkspace
-    >;
+    [FeatureType.UnlimitedWorkspace]: WorkspaceFeatureCommonParams;
   }
 }

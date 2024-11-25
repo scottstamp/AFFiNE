@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { FeatureType, PolicyConfigInfer } from './common';
+import { FeatureType, WorkspaceFeatureCommonParams } from './common';
 
 export const featureUnlimitedCopilot = z.object({
   feature: z.literal(FeatureType.UnlimitedCopilot),
@@ -9,8 +9,6 @@ export const featureUnlimitedCopilot = z.object({
 
 declare module '../../../fundamentals/policy/config' {
   export interface PolicyConfig {
-    [FeatureType.UnlimitedCopilot]: PolicyConfigInfer<
-      typeof featureUnlimitedCopilot
-    >;
+    [FeatureType.UnlimitedCopilot]: WorkspaceFeatureCommonParams;
   }
 }
