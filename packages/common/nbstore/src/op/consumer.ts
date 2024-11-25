@@ -69,10 +69,9 @@ export class SpaceStorageConsumer extends SpaceStorage {
     this.consumer.register('getDocDiff', ({ docId, state }) => {
       return storage.getDocDiff(docId, state);
     });
-    this.consumer.register(
-      'pushDocUpdate',
-      storage.pushDocUpdate.bind(storage)
-    );
+    this.consumer.register('pushDocUpdate', ({ update, origin }) => {
+      return storage.pushDocUpdate(update, origin);
+    });
     this.consumer.register(
       'getDocTimestamps',
       storage.getDocTimestamps.bind(storage)
@@ -81,8 +80,8 @@ export class SpaceStorageConsumer extends SpaceStorage {
     this.consumer.register('subscribeDocUpdate', () => {
       return new Observable(subscriber => {
         subscriber.add(
-          storage.subscribeDocUpdate(update => {
-            subscriber.next(update);
+          storage.subscribeDocUpdate((update, origin) => {
+            subscriber.next({ update, origin });
           })
         );
       });
@@ -117,10 +116,10 @@ export class SpaceStorageConsumer extends SpaceStorage {
   private registerSyncHandlers(storage: SyncStorage) {
     this.consumer.register(
       'getPeerClocks',
-      storage.getPeerClocks.bind(storage)
+      storage.getPeerRemoteClocks.bind(storage)
     );
     this.consumer.register('setPeerClock', ({ peer, ...clock }) => {
-      return storage.setPeerClock(peer, clock);
+      return storage.setPeerRemoteClock(peer, clock);
     });
     this.consumer.register(
       'getPeerPushedClocks',

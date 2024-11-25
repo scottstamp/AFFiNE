@@ -104,6 +104,25 @@ export abstract class Connection<T = any> {
     });
   }
 
+  waitForConnected(signal?: AbortSignal) {
+    return new Promise<void>((resolve, reject) => {
+      if (this.status === 'connected') {
+        resolve();
+        return;
+      }
+
+      this.onStatusChanged(status => {
+        if (status === 'connected') {
+          resolve();
+        }
+      });
+
+      signal?.addEventListener('abort', reason => {
+        reject(reason);
+      });
+    });
+  }
+
   onStatusChanged(
     cb: (status: ConnectionStatus, error?: Error) => void
   ): () => void {

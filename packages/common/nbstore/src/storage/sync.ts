@@ -8,8 +8,14 @@ export abstract class SyncStorage<
 > extends Storage<Opts> {
   override readonly storageType = 'sync';
 
-  abstract getPeerClocks(peer: string): Promise<DocClocks>;
-  abstract setPeerClock(peer: string, clock: DocClock): Promise<void>;
+  abstract getPeerRemoteClocks(peer: string): Promise<DocClocks>;
+  abstract setPeerRemoteClock(peer: string, clock: DocClock): Promise<void>;
+  abstract getPeerPulledRemoteClocks(peer: string): Promise<DocClocks>;
+
+  abstract setPeerPulledRemoteClock(
+    peer: string,
+    clock: DocClock
+  ): Promise<void>;
   abstract getPeerPushedClocks(peer: string): Promise<DocClocks>;
   abstract setPeerPushedClock(peer: string, clock: DocClock): Promise<void>;
   abstract clearClocks(): Promise<void>;

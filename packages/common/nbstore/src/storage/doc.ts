@@ -1,6 +1,7 @@
 import EventEmitter2 from 'eventemitter2';
 import { diffUpdate, encodeStateVectorFromUpdate, mergeUpdates } from 'yjs';
 
+import { isEmptyUpdate } from '../utils/is-empty-update';
 import type { Lock } from './lock';
 import { SingletonLocker } from './lock';
 import { Storage, type StorageOptions } from './storage';
@@ -42,23 +43,6 @@ export abstract class DocStorage<
   private readonly event = new EventEmitter2();
   override readonly storageType = 'doc';
   private readonly locker = new SingletonLocker();
-
-  /**
-   * Tell a binary is empty yjs binary or not.
-   *
-   * NOTE:
-   *   `[0, 0]` is empty yjs update binary
-   *   `[0]` is empty yjs state vector binary
-   */
-  isEmptyBin(bin: Uint8Array): boolean {
-    return (
-      bin.length === 0 ||
-      // 0x0 for state vector
-      (bin.length === 1 && bin[0] === 0) ||
-      // 0x00 for update
-      (bin.length === 2 && bin[0] === 0 && bin[1] === 0)
-    );
-  }
 
   // REGION: open apis by Op system
   /**
@@ -114,8 +98,15 @@ export abstract class DocStorage<
 
   /**
    * Push updates into storage
+   *
+   * @param origin - Internal identifier to recognize the source in the "update" event. Will not be stored or transferred.
    */
-  abstract pushDocUpdate(update: DocUpdate): Promise<DocClock>;
+  abstract pushDocUpdate(update: DocUpdate, origin?: string): Promise<DocClock>;
+
+  /**
+   * Get the timestamp of the latest update of a doc.
+   */
+  abstract getDocTimestamp(docId: string): Promise<DocClock | null>;
 
   /**
    * Get all docs timestamps info. especially for useful in sync process.
@@ -140,7 +131,7 @@ export abstract class DocStorage<
    *   But for Cloud storage, there will be updates broadcasted from other clients,
    *   so the storage will emit updates to notify the client to integrate them.
    */
-  subscribeDocUpdate(callback: (update: DocRecord) => void) {
+  subscribeDocUpdate(callback: (update: DocRecord, origin?: string) => void) {
     this.event.on('update', callback);
 
     return () => {
@@ -152,7 +143,7 @@ export abstract class DocStorage<
   // REGION: api for internal usage
   protected on(
     event: 'update',
-    callback: (update: DocRecord) => void
+    callback: (update: DocRecord, origin: string) => void
   ): () => void;
   protected on(
     event: 'snapshot',
@@ -165,7 +156,7 @@ export abstract class DocStorage<
     };
   }
 
-  protected emit(event: 'update', update: DocRecord): void;
+  protected emit(event: 'update', update: DocRecord, origin?: string): void;
   protected emit(
     event: 'snapshot',
     snapshot: DocRecord,
@@ -249,7 +240,7 @@ export abstract class DocStorage<
   protected mergeUpdates(updates: Uint8Array[]) {
     const merge = this.options?.mergeUpdates ?? mergeUpdates;
 
-    return merge(updates.filter(bin => !this.isEmptyBin(bin)));
+    return merge(updates.filter(bin => !isEmptyUpdate(bin)));
   }
 
   protected async lockDocForUpdate(docId: string): Promise<Lock> {

@@ -86,7 +86,7 @@ export abstract class HistoricalDocStorage<
     }
 
     const change = this.generateRevertUpdate(fromSnapshot.bin, toSnapshot.bin);
-    await this.pushDocUpdate({ docId, bin: change, editor });
+    await this.pushDocUpdate({ docId, bin: change, editor }, 'rollback');
     // force create a new history record after rollback
     await this.createHistory(docId, fromSnapshot);
   }

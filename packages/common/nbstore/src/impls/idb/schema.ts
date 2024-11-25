@@ -94,6 +94,7 @@ export interface DocStorageSchema extends DBSchema {
       peer: string;
       docId: string;
       clock: Date;
+      pulledClock: Date;
       pushedClock: Date;
     };
     indexes: {

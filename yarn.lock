@@ -727,11 +727,15 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@affine/nbstore@workspace:packages/common/nbstore"
   dependencies:
+    "@datastructures-js/binary-search-tree": "npm:^5.3.2"
     "@toeverything/infra": "workspace:*"
     eventemitter2: "npm:^6.4.9"
+    fake-indexeddb: "npm:^6.0.0"
     idb: "npm:^8.0.0"
     lodash-es: "npm:^4.17.21"
+    nanoid: "npm:^5.0.7"
     rxjs: "npm:^7.8.1"
+    vitest: "npm:2.1.4"
     yjs: "patch:yjs@npm%3A13.6.18#~/.yarn/patches/yjs-npm-13.6.18-ad0d5f7c43.patch"
   peerDependencies:
     idb: ^8.0.0

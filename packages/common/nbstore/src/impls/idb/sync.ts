@@ -8,7 +8,7 @@ export class IndexedDBSyncStorage extends SyncStorage {
     return this.connection.inner;
   }
 
-  override async getPeerClocks(peer: string) {
+  override async getPeerRemoteClocks(peer: string) {
     const trx = this.db.transaction('peerClocks', 'readonly');
 
     const records = await trx.store.index('peer').getAll(peer);
@@ -19,7 +19,7 @@ export class IndexedDBSyncStorage extends SyncStorage {
     }, {} as DocClocks);
   }
 
-  override async setPeerClock(peer: string, clock: DocClock) {
+  override async setPeerRemoteClock(peer: string, clock: DocClock) {
     const trx = this.db.transaction('peerClocks', 'readwrite');
     const record = await trx.store.get([peer, clock.docId]);
 
@@ -28,6 +28,32 @@ export class IndexedDBSyncStorage extends SyncStorage {
         peer,
         docId: clock.docId,
         clock: clock.timestamp,
+        pulledClock: record?.pulledClock ?? new Date(0),
+        pushedClock: record?.pushedClock ?? new Date(0),
+      });
+    }
+  }
+
+  override async getPeerPulledRemoteClocks(peer: string) {
+    const trx = this.db.transaction('peerClocks', 'readonly');
+
+    const records = await trx.store.index('peer').getAll(peer);
+
+    return records.reduce((clocks, { docId, pulledClock }) => {
+      clocks[docId] = pulledClock;
+      return clocks;
+    }, {} as DocClocks);
+  }
+  override async setPeerPulledRemoteClock(peer: string, clock: DocClock) {
+    const trx = this.db.transaction('peerClocks', 'readwrite');
+    const record = await trx.store.get([peer, clock.docId]);
+
+    if (!record || record.pulledClock < clock.timestamp) {
+      await trx.store.put({
+        peer,
+        docId: clock.docId,
+        clock: record?.clock ?? new Date(0),
+        pulledClock: clock.timestamp,
         pushedClock: record?.pushedClock ?? new Date(0),
       });
     }
@@ -54,6 +80,7 @@ export class IndexedDBSyncStorage extends SyncStorage {
         docId: clock.docId,
         clock: record?.clock ?? new Date(0),
         pushedClock: clock.timestamp,
+        pulledClock: record?.pulledClock ?? new Date(0),
       });
     }
   }

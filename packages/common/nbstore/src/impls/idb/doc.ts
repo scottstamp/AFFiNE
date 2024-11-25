@@ -1,5 +1,6 @@
 import { share } from '../../connection';
 import {
+  type DocClock,
   type DocClocks,
   type DocRecord,
   DocStorage,
@@ -14,15 +15,37 @@ export class IndexedDBDocStorage extends DocStorage {
     return this.connection.inner;
   }
 
-  override async pushDocUpdate(update: DocUpdate) {
-    const trx = this.db.transaction(['updates', 'clocks'], 'readwrite');
+  private _lastTimestamp = new Date(0);
+
+  private generateTimestamp() {
     const timestamp = new Date();
+    if (timestamp.getTime() <= this._lastTimestamp.getTime()) {
+      timestamp.setTime(this._lastTimestamp.getTime() + 1);
+    }
+    this._lastTimestamp = timestamp;
+    return timestamp;
+  }
+
+  override async pushDocUpdate(update: DocUpdate, origin?: string) {
+    const trx = this.db.transaction(['updates', 'clocks'], 'readwrite');
+    const timestamp = this.generateTimestamp();
     await trx.objectStore('updates').add({
       ...update,
       createdAt: timestamp,
     });
 
     await trx.objectStore('clocks').put({ docId: update.docId, timestamp });
+
+    this.emit(
+      'update',
+      {
+        docId: update.docId,
+        bin: update.bin,
+        timestamp,
+        editor: update.editor,
+      },
+      origin
+    );
 
     return { docId: update.docId, timestamp };
   }
@@ -70,6 +93,12 @@ export class IndexedDBDocStorage extends DocStorage {
       }
       return ret;
     }, {} as DocClocks);
+  }
+
+  override async getDocTimestamp(docId: string): Promise<DocClock | null> {
+    const trx = this.db.transaction('clocks', 'readonly');
+
+    return (await trx.store.get(docId)) ?? null;
   }
 
   protected override async setDocSnapshot(

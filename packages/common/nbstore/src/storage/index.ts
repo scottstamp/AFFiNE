@@ -2,6 +2,9 @@ import EventEmitter2 from 'eventemitter2';
 
 import type { ConnectionStatus } from '../connection';
 import { type Storage, type StorageType } from '../storage';
+import type { BlobStorage } from './blob';
+import type { DocStorage } from './doc';
+import type { SyncStorage } from './sync';
 
 export class SpaceStorage {
   protected readonly storages: Map<StorageType, Storage> = new Map();
@@ -14,12 +17,18 @@ export class SpaceStorage {
     );
   }
 
+  tryGet(type: 'blob'): BlobStorage | undefined;
+  tryGet(type: 'sync'): SyncStorage | undefined;
+  tryGet(type: 'doc'): DocStorage | undefined;
   tryGet(type: StorageType) {
     return this.storages.get(type);
   }
 
+  get(type: 'blob'): BlobStorage;
+  get(type: 'sync'): SyncStorage;
+  get(type: 'doc'): DocStorage;
   get(type: StorageType) {
-    const storage = this.tryGet(type);
+    const storage = this.storages.get(type);
 
     if (!storage) {
       throw new Error(`Storage ${type} not registered.`);
@@ -31,6 +40,7 @@ export class SpaceStorage {
   async connect() {
     await Promise.allSettled(
       Array.from(this.storages.values()).map(async storage => {
+        // FIXME: multiple calls will register multiple listeners
         this.disposables.add(
           storage.connection.onStatusChanged((status, error) => {
             this.event.emit('connection', {

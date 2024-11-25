@@ -31,10 +31,10 @@ export interface SpaceStorageOps extends OpSchema {
   // doc
   getDoc: [string, DocRecord | null];
   getDocDiff: [{ docId: string; state?: Uint8Array }, DocDiff | null];
-  pushDocUpdate: [DocUpdate, DocClock];
+  pushDocUpdate: [{ update: DocUpdate; origin?: string }, DocClock];
   getDocTimestamps: [Date, DocClocks];
   deleteDoc: [string, void];
-  subscribeDocUpdate: [void, DocRecord];
+  subscribeDocUpdate: [void, { update: DocRecord; origin?: string }];
 
   // history
   listHistory: [{ docId: string; filter?: HistoryFilter }, ListedHistory[]];

@@ -57,6 +57,10 @@ export class IndexedDBV1DocStorage extends DocStorage {
     return {};
   }
 
+  override async getDocTimestamp(_docId: string) {
+    return null;
+  }
+
   protected override async setDocSnapshot(): Promise<boolean> {
     return false;
   }
