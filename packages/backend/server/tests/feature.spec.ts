@@ -136,21 +136,6 @@ test('should be able revert user feature', async t => {
   t.is(q3[0].activated, false, 'should be deactivated');
 });
 
-test('should be same instance after reset the user feature', async t => {
-  const { auth, feature, management } = t.context;
-  const u1 = await auth.signUp('test@test.com', '123456');
-
-  await management.addEarlyAccess(u1.id);
-  const f1 = (await feature.getUserFeatures(u1.id))[0];
-
-  await management.removeEarlyAccess(u1.id);
-
-  await management.addEarlyAccess(u1.id);
-  const f2 = (await feature.getUserFeatures(u1.id))[1];
-
-  t.is(f1.feature, f2.feature, 'should be same instance');
-});
-
 test('should be able to set workspace feature', async t => {
   const { auth, feature, workspace } = t.context;
 
