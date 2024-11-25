@@ -72,11 +72,13 @@ export class SubscriptionStore extends Store {
     const data = await this.gqlService.gql({
       query: resumeSubscriptionMutation,
       variables: {
-        idempotencyKey,
         plan,
       },
       context: {
         signal: abortSignal,
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
       },
     });
     return data.resumeSubscription;
@@ -90,11 +92,13 @@ export class SubscriptionStore extends Store {
     const data = await this.gqlService.gql({
       query: cancelSubscriptionMutation,
       variables: {
-        idempotencyKey,
         plan,
       },
       context: {
         signal: abortSignal,
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
       },
     });
     return data.cancelSubscription;
@@ -118,9 +122,13 @@ export class SubscriptionStore extends Store {
     return this.gqlService.gql({
       query: updateSubscriptionMutation,
       variables: {
-        idempotencyKey,
         plan,
         recurring,
+      },
+      context: {
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
       },
     });
   }

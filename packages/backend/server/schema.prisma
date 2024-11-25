@@ -335,7 +335,7 @@ model UserSubscription {
   // yearly/monthly/lifetime
   recurring            String    @db.VarChar(20)
   // onetime subscription or anything else
-  variant              String?    @db.VarChar(20)
+  variant              String?   @db.VarChar(20)
   // subscription.id, null for linefetime payment or one time payment subscription
   stripeSubscriptionId String?   @unique @map("stripe_subscription_id")
   // subscription.status, active/past_due/canceled/unpaid...
@@ -370,18 +370,22 @@ model UserInvoice {
   // CNY 12.50 stored as 1250
   amount           Int      @db.Integer
   status           String   @db.VarChar(20)
-  plan             String   @db.VarChar(20)
-  recurring        String   @db.VarChar(20)
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
   // billing reason
-  reason           String   @db.VarChar
+  reason           String?  @db.VarChar
   lastPaymentError String?  @map("last_payment_error") @db.Text
   // stripe hosted invoice link
   link             String?  @db.Text
 
+  // @deprecated
+  plan      String? @db.VarChar(20)
+  // @deprecated
+  recurring String? @db.VarChar(20)
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("user_invoices")
 }
 

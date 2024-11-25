@@ -1,6 +1,6 @@
+import { Headers } from '@nestjs/common';
 import {
   Args,
-  Context,
   Field,
   InputType,
   Int,
@@ -12,19 +12,15 @@ import {
   ResolveField,
   Resolver,
 } from '@nestjs/graphql';
-import type { User, UserInvoice, UserSubscription } from '@prisma/client';
+import type { User, UserSubscription } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
 import { groupBy } from 'lodash-es';
 
 import { CurrentUser, Public } from '../../core/auth';
 import { UserType } from '../../core/user';
-import {
-  AccessDenied,
-  Config,
-  FailedToCheckout,
-  URLHelper,
-} from '../../fundamentals';
-import { decodeLookupKey, SubscriptionService } from './service';
+import { AccessDenied, FailedToCheckout, URLHelper } from '../../fundamentals';
+import { Invoice, Subscription } from './manager';
+import { SubscriptionService } from './service';
 import {
   InvoiceStatus,
   SubscriptionPlan,
@@ -60,11 +56,8 @@ class SubscriptionPrice {
   lifetimeAmount?: number | null;
 }
 
-@ObjectType('UserSubscription')
-export class UserSubscriptionType implements Partial<UserSubscription> {
-  @Field(() => String, { name: 'id', nullable: true })
-  stripeSubscriptionId!: string | null;
-
+@ObjectType()
+export class SubscriptionType implements Subscription {
   @Field(() => SubscriptionPlan, {
     description:
       "The 'Free' plan just exists to be a placeholder and for the type convenience of frontend.\nThere won't actually be a subscription with plan 'Free'",
@@ -75,7 +68,7 @@ export class UserSubscriptionType implements Partial<UserSubscription> {
   recurring!: SubscriptionRecurring;
 
   @Field(() => SubscriptionVariant, { nullable: true })
-  variant?: SubscriptionVariant | null;
+  variant!: SubscriptionVariant | null;
 
   @Field(() => SubscriptionStatus)
   status!: SubscriptionStatus;
@@ -87,35 +80,34 @@ export class UserSubscriptionType implements Partial<UserSubscription> {
   end!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  trialStart?: Date | null;
+  trialStart!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  trialEnd?: Date | null;
+  trialEnd!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  nextBillAt?: Date | null;
+  nextBillAt!: Date | null;
 
   @Field(() => Date, { nullable: true })
-  canceledAt?: Date | null;
+  canceledAt!: Date | null;
 
   @Field(() => Date)
   createdAt!: Date;
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  // deprecated fields
+  @Field(() => String, {
+    name: 'id',
+    nullable: true,
+    deprecationReason: 'removed',
+  })
+  stripeSubscriptionId!: string;
 }
 
-@ObjectType('UserInvoice')
-class UserInvoiceType implements Partial<UserInvoice> {
-  @Field({ name: 'id' })
-  stripeInvoiceId!: string;
-
-  @Field(() => SubscriptionPlan)
-  plan!: SubscriptionPlan;
-
-  @Field(() => SubscriptionRecurring)
-  recurring!: SubscriptionRecurring;
-
+@ObjectType()
+export class InvoiceType implements Invoice {
   @Field()
   currency!: string;
 
@@ -129,16 +121,36 @@ class UserInvoiceType implements Partial<UserInvoice> {
   reason!: string;
 
   @Field(() => String, { nullable: true })
-  lastPaymentError?: string | null;
+  lastPaymentError!: string | null;
 
   @Field(() => String, { nullable: true })
-  link?: string | null;
+  link!: string | null;
 
   @Field(() => Date)
   createdAt!: Date;
 
   @Field(() => Date)
   updatedAt!: Date;
+
+  // deprecated fields
+  @Field(() => String, {
+    name: 'id',
+    nullable: true,
+    deprecationReason: 'removed',
+  })
+  stripeInvoiceId!: string | null;
+
+  @Field(() => SubscriptionPlan, {
+    nullable: true,
+    deprecationReason: 'removed',
+  })
+  plan!: SubscriptionPlan | null;
+
+  @Field(() => SubscriptionRecurring, {
+    nullable: true,
+    deprecationReason: 'removed',
+  })
+  recurring!: SubscriptionRecurring | null;
 }
 
 @InputType()
@@ -166,12 +178,14 @@ class CreateCheckoutSessionInput {
   @Field(() => String)
   successCallbackLink!: string;
 
-  // @FIXME(forehalo): we should put this field in the header instead of as a explicity args
-  @Field(() => String)
-  idempotencyKey!: string;
+  @Field(() => String, {
+    nullable: true,
+    deprecationReason: 'use header `Idempotency-Key`',
+  })
+  idempotencyKey?: string;
 }
 
-@Resolver(() => UserSubscriptionType)
+@Resolver(() => SubscriptionType)
 export class SubscriptionResolver {
   constructor(
     private readonly service: SubscriptionService,
@@ -186,9 +200,7 @@ export class SubscriptionResolver {
     const prices = await this.service.listPrices(user);
 
     const group = groupBy(prices, price => {
-      // @ts-expect-error empty lookup key is filtered out
-      const [plan] = decodeLookupKey(price.lookup_key);
-      return plan;
+      return price.lookupKey.plan;
     });
 
     function findPrice(plan: SubscriptionPlan) {
@@ -198,21 +210,24 @@ export class SubscriptionResolver {
         return null;
       }
 
-      const monthlyPrice = prices.find(p => p.recurring?.interval === 'month');
-      const yearlyPrice = prices.find(p => p.recurring?.interval === 'year');
-      const lifetimePrice = prices.find(
-        p =>
-          // asserted before
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          decodeLookupKey(p.lookup_key!)[1] === SubscriptionRecurring.Lifetime
+      const monthlyPrice = prices.find(
+        p => p.lookupKey.recurring === SubscriptionRecurring.Monthly
       );
-      const currency = monthlyPrice?.currency ?? yearlyPrice?.currency ?? 'usd';
+      const yearlyPrice = prices.find(
+        p => p.lookupKey.recurring === SubscriptionRecurring.Yearly
+      );
+      const lifetimePrice = prices.find(
+        p => p.lookupKey.recurring === SubscriptionRecurring.Lifetime
+      );
+
+      const currency =
+        monthlyPrice?.price.currency ?? yearlyPrice?.price.currency ?? 'usd';
 
       return {
         currency,
-        amount: monthlyPrice?.unit_amount,
-        yearlyAmount: yearlyPrice?.unit_amount,
-        lifetimeAmount: lifetimePrice?.unit_amount,
+        amount: monthlyPrice?.price.unit_amount,
+        yearlyAmount: yearlyPrice?.price.unit_amount,
+        lifetimeAmount: lifetimePrice?.price.unit_amount,
       };
     }
 
@@ -240,16 +255,19 @@ export class SubscriptionResolver {
   async createCheckoutSession(
     @CurrentUser() user: CurrentUser,
     @Args({ name: 'input', type: () => CreateCheckoutSessionInput })
-    input: CreateCheckoutSessionInput
+    input: CreateCheckoutSessionInput,
+    @Headers('idempotency-key') idempotencyKey?: string
   ) {
-    const session = await this.service.createCheckoutSession({
+    const session = await this.service.checkout({
       user,
-      plan: input.plan,
-      recurring: input.recurring,
-      variant: input.variant,
+      lookupKey: {
+        plan: input.plan,
+        recurring: input.recurring,
+        variant: input.variant,
+      },
       promotionCode: input.coupon,
       redirectUrl: this.url.link(input.successCallbackLink),
-      idempotencyKey: input.idempotencyKey,
+      idempotencyKey,
     });
 
     if (!session.url) {
@@ -266,7 +284,7 @@ export class SubscriptionResolver {
     return this.service.createCustomerPortal(user.id);
   }
 
-  @Mutation(() => UserSubscriptionType)
+  @Mutation(() => SubscriptionType)
   async cancelSubscription(
     @CurrentUser() user: CurrentUser,
     @Args({
@@ -276,12 +294,18 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
-    @Args('idempotencyKey') idempotencyKey: string
+    @Headers('idempotency-key') idempotencyKey?: string,
+    @Args('idempotencyKey', {
+      type: () => String,
+      nullable: true,
+      deprecationReason: 'use header `Idempotency-Key`',
+    })
+    _?: string
   ) {
-    return this.service.cancelSubscription(idempotencyKey, user.id, plan);
+    return this.service.cancelSubscription(user.id, plan, idempotencyKey);
   }
 
-  @Mutation(() => UserSubscriptionType)
+  @Mutation(() => SubscriptionType)
   async resumeSubscription(
     @CurrentUser() user: CurrentUser,
     @Args({
@@ -291,16 +315,18 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
-    @Args('idempotencyKey') idempotencyKey: string
+    @Headers('idempotency-key') idempotencyKey?: string,
+    @Args('idempotencyKey', {
+      type: () => String,
+      nullable: true,
+      deprecationReason: 'use header `Idempotency-Key`',
+    })
+    _?: string
   ) {
-    return this.service.resumeCanceledSubscription(
-      idempotencyKey,
-      user.id,
-      plan
-    );
+    return this.service.resumeSubscription(user.id, plan, idempotencyKey);
   }
 
-  @Mutation(() => UserSubscriptionType)
+  @Mutation(() => SubscriptionType)
   async updateSubscriptionRecurring(
     @CurrentUser() user: CurrentUser,
     @Args({ name: 'recurring', type: () => SubscriptionRecurring })
@@ -312,88 +338,28 @@ export class SubscriptionResolver {
       defaultValue: SubscriptionPlan.Pro,
     })
     plan: SubscriptionPlan,
-    @Args('idempotencyKey') idempotencyKey: string
+    @Headers('idempotency-key') idempotencyKey?: string,
+    @Args('idempotencyKey', {
+      type: () => String,
+      nullable: true,
+      deprecationReason: 'use header `Idempotency-Key`',
+    })
+    _?: string
   ) {
     return this.service.updateSubscriptionRecurring(
-      idempotencyKey,
       user.id,
       plan,
-      recurring
+      recurring,
+      idempotencyKey
     );
   }
 }
 
 @Resolver(() => UserType)
 export class UserSubscriptionResolver {
-  constructor(
-    private readonly config: Config,
-    private readonly db: PrismaClient
-  ) {}
+  constructor(private readonly db: PrismaClient) {}
 
-  @ResolveField(() => UserSubscriptionType, {
-    nullable: true,
-    deprecationReason: 'use `UserType.subscriptions`',
-  })
-  async subscription(
-    @Context() ctx: { isAdminQuery: boolean },
-    @CurrentUser() me: User,
-    @Parent() user: User,
-    @Args({
-      name: 'plan',
-      type: () => SubscriptionPlan,
-      nullable: true,
-      defaultValue: SubscriptionPlan.Pro,
-    })
-    plan: SubscriptionPlan
-  ) {
-    // allow admin to query other user's subscription
-    if (!ctx.isAdminQuery && me.id !== user.id) {
-      throw new AccessDenied();
-    }
-
-    // @FIXME(@forehalo): should not mock any api for selfhosted server
-    // the frontend should avoid calling such api if feature is not enabled
-    if (this.config.isSelfhosted) {
-      const start = new Date();
-      const end = new Date();
-      end.setFullYear(start.getFullYear() + 1);
-
-      return {
-        stripeSubscriptionId: 'dummy',
-        plan: SubscriptionPlan.SelfHosted,
-        recurring: SubscriptionRecurring.Yearly,
-        status: SubscriptionStatus.Active,
-        start,
-        end,
-        createdAt: start,
-        updatedAt: start,
-      };
-    }
-
-    const subscription = await this.db.userSubscription.findUnique({
-      where: {
-        userId_plan: {
-          userId: user.id,
-          plan,
-        },
-        status: SubscriptionStatus.Active,
-      },
-    });
-
-    if (
-      subscription &&
-      subscription.variant &&
-      ![SubscriptionVariant.EA, SubscriptionVariant.Onetime].includes(
-        subscription.variant as SubscriptionVariant
-      )
-    ) {
-      subscription.variant = null;
-    }
-
-    return subscription;
-  }
-
-  @ResolveField(() => [UserSubscriptionType])
+  @ResolveField(() => [SubscriptionType])
   async subscriptions(
     @CurrentUser() me: User,
     @Parent() user: User
@@ -423,7 +389,7 @@ export class UserSubscriptionResolver {
     return subscriptions;
   }
 
-  @ResolveField(() => [UserInvoiceType])
+  @ResolveField(() => [InvoiceType])
   async invoices(
     @CurrentUser() me: User,
     @Parent() user: User,

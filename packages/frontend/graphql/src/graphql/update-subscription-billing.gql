@@ -1,13 +1,8 @@
 mutation updateSubscription(
-  $idempotencyKey: String!
   $plan: SubscriptionPlan = Pro
   $recurring: SubscriptionRecurring!
 ) {
-  updateSubscriptionRecurring(
-    idempotencyKey: $idempotencyKey
-    plan: $plan
-    recurring: $recurring
-  ) {
+  updateSubscriptionRecurring(plan: $plan, recurring: $recurring) {
     id
     plan
     recurring

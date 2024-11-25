@@ -2,24 +2,29 @@ import './config';
 
 import { ServerFeature } from '../../core/config';
 import { FeatureModule } from '../../core/features';
+import { UserModule } from '../../core/user';
 import { Plugin } from '../registry';
+import { StripeWebhookController } from './controller';
+import { SubscriptionCronJobs } from './cron';
+import { UserSubscriptionManager } from './manager';
 import { SubscriptionResolver, UserSubscriptionResolver } from './resolver';
-import { ScheduleManager } from './schedule';
 import { SubscriptionService } from './service';
 import { StripeProvider } from './stripe';
 import { StripeWebhook } from './webhook';
 
 @Plugin({
   name: 'payment',
-  imports: [FeatureModule],
+  imports: [FeatureModule, UserModule],
   providers: [
-    ScheduleManager,
     StripeProvider,
     SubscriptionService,
     SubscriptionResolver,
     UserSubscriptionResolver,
+    StripeWebhook,
+    UserSubscriptionManager,
+    SubscriptionCronJobs,
   ],
-  controllers: [StripeWebhook],
+  controllers: [StripeWebhookController],
   requires: [
     'plugins.payment.stripe.keys.APIKey',
     'plugins.payment.stripe.keys.webhookKey',

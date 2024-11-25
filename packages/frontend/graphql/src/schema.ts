@@ -190,7 +190,7 @@ export interface CreateChatSessionInput {
 
 export interface CreateCheckoutSessionInput {
   coupon: InputMaybe<Scalars['String']['input']>;
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: InputMaybe<Scalars['String']['input']>;
   plan: InputMaybe<SubscriptionPlan>;
   recurring: InputMaybe<SubscriptionRecurring>;
   successCallbackLink: Scalars['String']['input'];
@@ -458,6 +458,24 @@ export enum InvoiceStatus {
   Void = 'Void',
 }
 
+export interface InvoiceType {
+  __typename?: 'InvoiceType';
+  amount: Scalars['Int']['output'];
+  createdAt: Scalars['DateTime']['output'];
+  currency: Scalars['String']['output'];
+  /** @deprecated removed */
+  id: Maybe<Scalars['String']['output']>;
+  lastPaymentError: Maybe<Scalars['String']['output']>;
+  link: Maybe<Scalars['String']['output']>;
+  /** @deprecated removed */
+  plan: Maybe<SubscriptionPlan>;
+  reason: Scalars['String']['output'];
+  /** @deprecated removed */
+  recurring: Maybe<SubscriptionRecurring>;
+  status: InvoiceStatus;
+  updatedAt: Scalars['DateTime']['output'];
+}
+
 export interface LimitedUserType {
   __typename?: 'LimitedUserType';
   /** User email */
@@ -487,7 +505,7 @@ export interface Mutation {
   __typename?: 'Mutation';
   acceptInviteById: Scalars['Boolean']['output'];
   addWorkspaceFeature: Scalars['Int']['output'];
-  cancelSubscription: UserSubscription;
+  cancelSubscription: SubscriptionType;
   changeEmail: UserType;
   changePassword: Scalars['Boolean']['output'];
   /** Cleanup sessions */
@@ -522,7 +540,7 @@ export interface Mutation {
   /** Remove user avatar */
   removeAvatar: RemoveAvatar;
   removeWorkspaceFeature: Scalars['Int']['output'];
-  resumeSubscription: UserSubscription;
+  resumeSubscription: SubscriptionType;
   revoke: Scalars['Boolean']['output'];
   /** @deprecated use revokePublicPage */
   revokePage: Scalars['Boolean']['output'];
@@ -543,7 +561,7 @@ export interface Mutation {
   updateRuntimeConfig: ServerRuntimeConfigType;
   /** update multiple server runtime configurable settings */
   updateRuntimeConfigs: Array<ServerRuntimeConfigType>;
-  updateSubscriptionRecurring: UserSubscription;
+  updateSubscriptionRecurring: SubscriptionType;
   /** Update a user */
   updateUser: UserType;
   /** update user enabled feature */
@@ -567,7 +585,7 @@ export interface MutationAddWorkspaceFeatureArgs {
 }
 
 export interface MutationCancelSubscriptionArgs {
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
 }
 
@@ -663,7 +681,7 @@ export interface MutationRemoveWorkspaceFeatureArgs {
 }
 
 export interface MutationResumeSubscriptionArgs {
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
 }
 
@@ -742,7 +760,7 @@ export interface MutationUpdateRuntimeConfigsArgs {
 }
 
 export interface MutationUpdateSubscriptionRecurringArgs {
-  idempotencyKey: Scalars['String']['input'];
+  idempotencyKey: InputMaybe<Scalars['String']['input']>;
   plan?: InputMaybe<SubscriptionPlan>;
   recurring: SubscriptionRecurring;
 }
@@ -821,6 +839,7 @@ export interface Query {
   /** List all copilot prompts */
   listCopilotPrompts: Array<CopilotPromptType>;
   listWorkspaceFeatures: Array<WorkspaceType>;
+  /** @deprecated use `userPrices` instead */
   prices: Array<SubscriptionPrice>;
   /** server config */
   serverConfig: ServerConfigType;
@@ -1066,6 +1085,28 @@ export enum SubscriptionStatus {
   Unpaid = 'Unpaid',
 }
 
+export interface SubscriptionType {
+  __typename?: 'SubscriptionType';
+  canceledAt: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  end: Maybe<Scalars['DateTime']['output']>;
+  /** @deprecated removed */
+  id: Maybe<Scalars['String']['output']>;
+  nextBillAt: Maybe<Scalars['DateTime']['output']>;
+  /**
+   * The 'Free' plan just exists to be a placeholder and for the type convenience of frontend.
+   * There won't actually be a subscription with plan 'Free'
+   */
+  plan: SubscriptionPlan;
+  recurring: SubscriptionRecurring;
+  start: Scalars['DateTime']['output'];
+  status: SubscriptionStatus;
+  trialEnd: Maybe<Scalars['DateTime']['output']>;
+  trialStart: Maybe<Scalars['DateTime']['output']>;
+  updatedAt: Scalars['DateTime']['output'];
+  variant: Maybe<SubscriptionVariant>;
+}
+
 export enum SubscriptionVariant {
   EA = 'EA',
   Onetime = 'Onetime',
@@ -1089,21 +1130,6 @@ export interface UpdateWorkspaceInput {
   public: InputMaybe<Scalars['Boolean']['input']>;
 }
 
-export interface UserInvoice {
-  __typename?: 'UserInvoice';
-  amount: Scalars['Int']['output'];
-  createdAt: Scalars['DateTime']['output'];
-  currency: Scalars['String']['output'];
-  id: Scalars['String']['output'];
-  lastPaymentError: Maybe<Scalars['String']['output']>;
-  link: Maybe<Scalars['String']['output']>;
-  plan: SubscriptionPlan;
-  reason: Scalars['String']['output'];
-  recurring: SubscriptionRecurring;
-  status: InvoiceStatus;
-  updatedAt: Scalars['DateTime']['output'];
-}
-
 export type UserOrLimitedUser = LimitedUserType | UserType;
 
 export interface UserQuota {
@@ -1123,27 +1149,6 @@ export interface UserQuotaHumanReadable {
   memberLimit: Scalars['String']['output'];
   name: Scalars['String']['output'];
   storageQuota: Scalars['String']['output'];
-}
-
-export interface UserSubscription {
-  __typename?: 'UserSubscription';
-  canceledAt: Maybe<Scalars['DateTime']['output']>;
-  createdAt: Scalars['DateTime']['output'];
-  end: Maybe<Scalars['DateTime']['output']>;
-  id: Maybe<Scalars['String']['output']>;
-  nextBillAt: Maybe<Scalars['DateTime']['output']>;
-  /**
-   * The 'Free' plan just exists to be a placeholder and for the type convenience of frontend.
-   * There won't actually be a subscription with plan 'Free'
-   */
-  plan: SubscriptionPlan;
-  recurring: SubscriptionRecurring;
-  start: Scalars['DateTime']['output'];
-  status: SubscriptionStatus;
-  trialEnd: Maybe<Scalars['DateTime']['output']>;
-  trialStart: Maybe<Scalars['DateTime']['output']>;
-  updatedAt: Scalars['DateTime']['output'];
-  variant: Maybe<SubscriptionVariant>;
 }
 
 export interface UserType {
@@ -1167,13 +1172,11 @@ export interface UserType {
   id: Scalars['ID']['output'];
   /** Get user invoice count */
   invoiceCount: Scalars['Int']['output'];
-  invoices: Array<UserInvoice>;
+  invoices: Array<InvoiceType>;
   /** User name */
   name: Scalars['String']['output'];
   quota: Maybe<UserQuota>;
-  /** @deprecated use `UserType.subscriptions` */
-  subscription: Maybe<UserSubscription>;
-  subscriptions: Array<UserSubscription>;
+  subscriptions: Array<SubscriptionType>;
   /** @deprecated use [/api/auth/sign-in?native=true] instead */
   token: TokenType;
 }
@@ -1185,10 +1188,6 @@ export interface UserTypeCopilotArgs {
 export interface UserTypeInvoicesArgs {
   skip: InputMaybe<Scalars['Int']['input']>;
   take?: InputMaybe<Scalars['Int']['input']>;
-}
-
-export interface UserTypeSubscriptionArgs {
-  plan?: InputMaybe<SubscriptionPlan>;
 }
 
 export interface VersionRejectedDataType {
@@ -1335,14 +1334,13 @@ export type SetBlobMutationVariables = Exact<{
 export type SetBlobMutation = { __typename?: 'Mutation'; setBlob: string };
 
 export type CancelSubscriptionMutationVariables = Exact<{
-  idempotencyKey: Scalars['String']['input'];
   plan?: InputMaybe<SubscriptionPlan>;
 }>;
 
 export type CancelSubscriptionMutation = {
   __typename?: 'Mutation';
   cancelSubscription: {
-    __typename?: 'UserSubscription';
+    __typename?: 'SubscriptionType';
     id: string | null;
     status: SubscriptionStatus;
     nextBillAt: string | null;
@@ -1956,11 +1954,9 @@ export type InvoicesQuery = {
     __typename?: 'UserType';
     invoiceCount: number;
     invoices: Array<{
-      __typename?: 'UserInvoice';
-      id: string;
+      __typename?: 'InvoiceType';
+      id: string | null;
       status: InvoiceStatus;
-      plan: SubscriptionPlan;
-      recurring: SubscriptionRecurring;
       currency: string;
       amount: number;
       reason: string;
@@ -2076,14 +2072,13 @@ export type RemoveAvatarMutation = {
 };
 
 export type ResumeSubscriptionMutationVariables = Exact<{
-  idempotencyKey: Scalars['String']['input'];
   plan?: InputMaybe<SubscriptionPlan>;
 }>;
 
 export type ResumeSubscriptionMutation = {
   __typename?: 'Mutation';
   resumeSubscription: {
-    __typename?: 'UserSubscription';
+    __typename?: 'SubscriptionType';
     id: string | null;
     status: SubscriptionStatus;
     nextBillAt: string | null;
@@ -2205,7 +2200,7 @@ export type SubscriptionQuery = {
     __typename?: 'UserType';
     id: string;
     subscriptions: Array<{
-      __typename?: 'UserSubscription';
+      __typename?: 'SubscriptionType';
       id: string | null;
       status: SubscriptionStatus;
       plan: SubscriptionPlan;
@@ -2287,7 +2282,6 @@ export type UpdateServerRuntimeConfigsMutation = {
 };
 
 export type UpdateSubscriptionMutationVariables = Exact<{
-  idempotencyKey: Scalars['String']['input'];
   plan?: InputMaybe<SubscriptionPlan>;
   recurring: SubscriptionRecurring;
 }>;
@@ -2295,7 +2289,7 @@ export type UpdateSubscriptionMutationVariables = Exact<{
 export type UpdateSubscriptionMutation = {
   __typename?: 'Mutation';
   updateSubscriptionRecurring: {
-    __typename?: 'UserSubscription';
+    __typename?: 'SubscriptionType';
     id: string | null;
     plan: SubscriptionPlan;
     recurring: SubscriptionRecurring;

@@ -80,8 +80,8 @@ export const cancelSubscriptionMutation = {
   definitionName: 'cancelSubscription',
   containsFile: false,
   query: `
-mutation cancelSubscription($idempotencyKey: String!, $plan: SubscriptionPlan = Pro) {
-  cancelSubscription(idempotencyKey: $idempotencyKey, plan: $plan) {
+mutation cancelSubscription($plan: SubscriptionPlan = Pro) {
+  cancelSubscription(plan: $plan) {
     id
     status
     nextBillAt
@@ -754,8 +754,6 @@ query invoices($take: Int!, $skip: Int!) {
     invoices(take: $take, skip: $skip) {
       id
       status
-      plan
-      recurring
       currency
       amount
       reason
@@ -893,8 +891,8 @@ export const resumeSubscriptionMutation = {
   definitionName: 'resumeSubscription',
   containsFile: false,
   query: `
-mutation resumeSubscription($idempotencyKey: String!, $plan: SubscriptionPlan = Pro) {
-  resumeSubscription(idempotencyKey: $idempotencyKey, plan: $plan) {
+mutation resumeSubscription($plan: SubscriptionPlan = Pro) {
+  resumeSubscription(plan: $plan) {
     id
     status
     nextBillAt
@@ -1117,12 +1115,8 @@ export const updateSubscriptionMutation = {
   definitionName: 'updateSubscriptionRecurring',
   containsFile: false,
   query: `
-mutation updateSubscription($idempotencyKey: String!, $plan: SubscriptionPlan = Pro, $recurring: SubscriptionRecurring!) {
-  updateSubscriptionRecurring(
-    idempotencyKey: $idempotencyKey
-    plan: $plan
-    recurring: $recurring
-  ) {
+mutation updateSubscription($plan: SubscriptionPlan = Pro, $recurring: SubscriptionRecurring!) {
+  updateSubscriptionRecurring(plan: $plan, recurring: $recurring) {
     id
     plan
     recurring

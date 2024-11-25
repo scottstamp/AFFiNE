@@ -63,8 +63,8 @@ export class ScheduleManager {
   }
 
   async fromSubscription(
-    idempotencyKey: string,
-    subscription: string | Stripe.Subscription
+    subscription: string | Stripe.Subscription,
+    idempotencyKey?: string
   ) {
     if (typeof subscription === 'string') {
       subscription = await this.stripe.subscriptions.retrieve(subscription, {
@@ -88,7 +88,7 @@ export class ScheduleManager {
    * Cancel a subscription by marking schedule's end behavior to `cancel`.
    * At the same time, the coming phase's price and coupon will be saved to metadata for later resuming to correction subscription.
    */
-  async cancel(idempotencyKey: string) {
+  async cancel(idempotencyKey?: string) {
     if (!this._schedule) {
       throw new Error('No schedule');
     }
@@ -129,7 +129,7 @@ export class ScheduleManager {
     );
   }
 
-  async resume(idempotencyKey: string) {
+  async resume(idempotencyKey?: string) {
     if (!this._schedule) {
       throw new Error('No schedule');
     }
@@ -188,7 +188,7 @@ export class ScheduleManager {
     });
   }
 
-  async update(idempotencyKey: string, price: string) {
+  async update(price: string, idempotencyKey?: string) {
     if (!this._schedule) {
       throw new Error('No schedule');
     }
