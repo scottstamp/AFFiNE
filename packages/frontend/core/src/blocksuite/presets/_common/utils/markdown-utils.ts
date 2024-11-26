@@ -12,6 +12,7 @@ import {
   PlainTextAdapter,
   titleMiddleware,
 } from '@blocksuite/affine/blocks';
+import type { Schema } from '@blocksuite/affine/store';
 import { DocCollection, Job } from '@blocksuite/affine/store';
 import { assertExists } from '@blocksuite/global/utils';
 import type {
@@ -184,8 +185,7 @@ export async function replaceFromMarkdown(
   await job.snapshotToSlice(snapshot, host.doc, parent, index);
 }
 
-export async function markDownToDoc(host: EditorHost, answer: string) {
-  const schema = host.std.doc.collection.schema;
+export async function markDownToDoc(schema: Schema, answer: string) {
   // Should not create a new doc in the original collection
   const collection = new DocCollection({
     schema,

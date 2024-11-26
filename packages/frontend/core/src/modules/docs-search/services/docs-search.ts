@@ -480,7 +480,7 @@ export class DocsSearchService extends Service {
           hits: {
             fields: ['docId', 'blockId', 'markdownPreview'],
             pagination: {
-              limit: 1,
+              limit: 3, // the number of backlinks to show
             },
           },
           pagination: {

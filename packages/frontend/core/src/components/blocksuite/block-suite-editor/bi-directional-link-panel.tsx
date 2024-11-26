@@ -1,14 +1,26 @@
+import { createReactComponentFromLit } from '@affine/component';
+import { TextRenderer } from '@affine/core/blocksuite/presets';
 import {
   type Backlink,
   DocLinksService,
   type Link,
 } from '@affine/core/modules/doc-link';
 import { useI18n } from '@affine/i18n';
-import { LiveData, useLiveData, useServices } from '@toeverything/infra';
-import { Fragment, useCallback, useState } from 'react';
+import {
+  getAFFiNEWorkspaceSchema,
+  LiveData,
+  useLiveData,
+  useServices,
+} from '@toeverything/infra';
+import React, { Fragment, useCallback, useState } from 'react';
 
 import { AffinePageReference } from '../../affine/reference-link';
 import * as styles from './bi-directional-link-panel.css';
+
+const BlocksuiteTextRenderer = createReactComponentFromLit({
+  react: React,
+  elementClass: TextRenderer,
+});
 
 export const BiDirectionalLinkPanel = () => {
   const [show, setShow] = useState(false);
@@ -57,7 +69,12 @@ export const BiDirectionalLinkPanel = () => {
                   <AffinePageReference key={link.docId} pageId={link.docId} />
                 </div>
                 <br />
-                <pre style={{ opacity: 0.5 }}>{link.markdownPreview}</pre>
+                <BlocksuiteTextRenderer
+                  key={link.docId}
+                  answer={link.markdownPreview}
+                  schema={getAFFiNEWorkspaceSchema()}
+                  options={{ customHeading: true }}
+                />
                 <br />
               </Fragment>
             ))}
