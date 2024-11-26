@@ -1,4 +1,3 @@
-import { ConfigModal } from '@affine/core/components/mobile';
 import { AuthService } from '@affine/core/modules/cloud';
 import type {
   DialogComponentProps,
@@ -13,6 +12,7 @@ import { AppearanceGroup } from './appearance';
 import { ExperimentalFeatureSetting } from './experimental';
 import { OthersGroup } from './others';
 import * as styles from './style.css';
+import { SwipeDialog } from './swipe-dialog';
 import { UserProfile } from './user-profile';
 import { UserUsage } from './user-usage';
 
@@ -38,13 +38,23 @@ export const SettingDialog = ({
   const t = useI18n();
 
   return (
-    <ConfigModal
+    <SwipeDialog
       title={t['com.affine.mobile.setting.header-title']()}
       open
       onOpenChange={() => close()}
-      onBack={close}
     >
       <MobileSetting />
-    </ConfigModal>
+    </SwipeDialog>
   );
+
+  // return (
+  //   <ConfigModal
+  //     title={t['com.affine.mobile.setting.header-title']()}
+  //     open
+  //     onOpenChange={() => close()}
+  //     onBack={close}
+  //   >
+  //     <MobileSetting />
+  //   </ConfigModal>
+  // );
 };

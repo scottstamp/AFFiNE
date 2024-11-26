@@ -1,5 +1,4 @@
-import { Modal, Scrollable, Switch } from '@affine/component';
-import { PageHeader } from '@affine/core/mobile/components';
+import { Switch } from '@affine/component';
 import { useI18n } from '@affine/i18n';
 import { ArrowRightSmallIcon } from '@blocksuite/icons/rc';
 import {
@@ -13,6 +12,7 @@ import { useCallback, useState } from 'react';
 
 import { SettingGroup } from '../group';
 import { RowLayout } from '../row.layout';
+import { SwipeDialog } from '../swipe-dialog';
 import * as styles from './styles.css';
 
 export const ExperimentalFeatureSetting = () => {
@@ -28,42 +28,29 @@ export const ExperimentalFeatureSetting = () => {
           <ArrowRightSmallIcon fontSize={22} />
         </RowLayout>
       </SettingGroup>
-      <Modal
-        animation="slideRight"
+      <SwipeDialog
         open={open}
         onOpenChange={setOpen}
-        fullScreen
-        contentOptions={{ className: styles.dialog }}
-        withoutCloseButton
+        title="Experimental Features"
       >
-        <ExperimentalFeatureList onBack={() => setOpen(false)} />
-      </Modal>
+        <ExperimentalFeatureList />
+      </SwipeDialog>
     </>
   );
 };
 
-const ExperimentalFeatureList = ({ onBack }: { onBack: () => void }) => {
+const ExperimentalFeatureList = () => {
   const featureFlagService = useService(FeatureFlagService);
 
   return (
-    <div className={styles.root}>
-      <PageHeader back={!!onBack} backAction={onBack} className={styles.header}>
-        <span className={styles.dialogTitle}>Experimental Features</span>
-      </PageHeader>
-      <Scrollable.Root className={styles.scrollArea}>
-        <Scrollable.Viewport>
-          <ul className={styles.content}>
-            {Object.keys(AFFINE_FLAGS).map(key => (
-              <ExperimentalFeaturesItem
-                key={key}
-                flag={featureFlagService.flags[key as keyof AFFINE_FLAGS]}
-              />
-            ))}
-          </ul>
-        </Scrollable.Viewport>
-        <Scrollable.Scrollbar orientation="vertical" />
-      </Scrollable.Root>
-    </div>
+    <ul className={styles.content}>
+      {Object.keys(AFFINE_FLAGS).map(key => (
+        <ExperimentalFeaturesItem
+          key={key}
+          flag={featureFlagService.flags[key as keyof AFFINE_FLAGS]}
+        />
+      ))}
+    </ul>
   );
 };
 

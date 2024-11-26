@@ -8,6 +8,7 @@ export const root = style({
   display: 'flex',
   flexDirection: 'column',
   gap: 16,
+  padding: '24px 16px',
 });
 
 export const baseSettingItem = style({

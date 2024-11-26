@@ -7,6 +7,7 @@ import { AllDocsIcon, MobileHomeIcon, SearchIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { assignInlineVars } from '@vanilla-extract/dynamic';
 import React from 'react';
+import { createPortal } from 'react-dom';
 import type { Location } from 'react-router-dom';
 
 import { VirtualKeyboardService } from '../../modules/virtual-keyboard/services/virtual-keyboard';
@@ -58,7 +59,7 @@ export const AppTabs = ({ background }: { background?: string }) => {
   const virtualKeyboardService = useService(VirtualKeyboardService);
   const virtualKeyboardVisible = useLiveData(virtualKeyboardService.show$);
 
-  return (
+  return createPortal(
     <SafeArea
       bottom
       className={styles.appTabs}
@@ -81,7 +82,8 @@ export const AppTabs = ({ background }: { background?: string }) => {
           }
         })}
       </ul>
-    </SafeArea>
+    </SafeArea>,
+    document.body
   );
 };
 
