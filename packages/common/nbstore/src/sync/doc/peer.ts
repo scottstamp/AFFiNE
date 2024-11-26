@@ -314,7 +314,7 @@ export class DocSyncPeer {
         pulledClock
       );
       if (updated) {
-        await this.syncMetadata.setPeerRemoteClock(this.remote.peer, {
+        await this.syncMetadata.setPeerPulledRemoteClock(this.remote.peer, {
           docId,
           timestamp: pulledClock,
         });
