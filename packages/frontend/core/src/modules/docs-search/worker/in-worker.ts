@@ -7,6 +7,7 @@ import {
   DocCollection,
   type DraftModel,
   Job,
+  type JobMiddleware,
   type YBlock,
 } from '@blocksuite/affine/store';
 import type { DeltaInsert } from '@blocksuite/inline';
@@ -73,42 +74,6 @@ async function getOrCreateCachedYDoc(data: Uint8Array) {
   }
 }
 
-function yblockToDraftModal(yblock: YBlock): DraftModel | null {
-  const flavour = yblock.get('sys:flavour');
-  const blockSchema = blocksuiteSchema.flavourSchemaMap.get(flavour);
-  if (!blockSchema) {
-    return null;
-  }
-  const keys = Array.from(yblock.keys())
-    .filter(key => key.startsWith('prop:'))
-    .map(key => key.substring(5));
-
-  const props = Object.fromEntries(
-    keys.map(key => [key, createYProxy(yblock.get(`prop:${key}`))])
-  );
-
-  return {
-    ...props,
-    id: yblock.get('sys:id'),
-    flavour,
-    children: [],
-    role: blockSchema.model.role,
-    version: (yblock.get('sys:version') as number) ?? blockSchema.version,
-    keys: Array.from(yblock.keys())
-      .filter(key => key.startsWith('prop:'))
-      .map(key => key.substring(5)),
-  };
-}
-
-const markdownAdapter = new MarkdownAdapter(
-  new Job({
-    collection: new DocCollection({
-      id: 'indexer',
-      schema: blocksuiteSchema,
-    }),
-  })
-);
-
 interface BlockDocumentInfo {
   docId: string;
   blockId: string;
@@ -124,40 +89,105 @@ interface BlockDocumentInfo {
   markdownPreview?: string;
 }
 
-const markdownPreviewCache = new WeakMap<BlockDocumentInfo, string | null>();
-const generateMarkdownPreview = async (block: BlockDocumentInfo) => {
-  if (markdownPreviewCache.has(block)) {
-    return markdownPreviewCache.get(block);
+function generateMarkdownPreviewBuilder(yRootDoc: YDoc) {
+  function yblockToDraftModal(yblock: YBlock): DraftModel | null {
+    const flavour = yblock.get('sys:flavour');
+    const blockSchema = blocksuiteSchema.flavourSchemaMap.get(flavour);
+    if (!blockSchema) {
+      return null;
+    }
+    const keys = Array.from(yblock.keys())
+      .filter(key => key.startsWith('prop:'))
+      .map(key => key.substring(5));
+
+    const props = Object.fromEntries(
+      keys.map(key => [key, createYProxy(yblock.get(`prop:${key}`))])
+    );
+
+    return {
+      ...props,
+      id: yblock.get('sys:id'),
+      flavour,
+      children: [],
+      role: blockSchema.model.role,
+      version: (yblock.get('sys:version') as number) ?? blockSchema.version,
+      keys: Array.from(yblock.keys())
+        .filter(key => key.startsWith('prop:'))
+        .map(key => key.substring(5)),
+    };
   }
-  const flavour = block.flavour;
-  let markdown: string | null = null;
-  if (
-    flavour === 'affine:paragraph' ||
-    flavour === 'affine:list' ||
-    flavour === 'affine:code'
-  ) {
-    const draftModel = yblockToDraftModal(block.yblock);
-    markdown =
-      block.parentFlavour === 'affine:database'
-        ? `database · ${block.additional?.databaseName}\n`
-        : ((draftModel ? await markdownAdapter.fromBlock(draftModel) : null)
-            ?.file ?? null);
-  }
-  if (
-    flavour === 'affine:embed-linked-doc' ||
-    flavour === 'affine:embed-synced-doc'
-  ) {
-    markdown = '🔗\n';
-  }
-  if (flavour === 'affine:attachment') {
-    markdown = '📃\n';
-  }
-  if (flavour === 'affine:image') {
-    markdown = '🖼️\n';
-  }
-  markdownPreviewCache.set(block, markdown);
-  return markdown;
-};
+
+  const titleMiddleware: JobMiddleware = ({ slots, adapterConfigs }) => {
+    slots.beforeExport.on(() => {
+      const pages = yRootDoc.getMap('meta').get('pages');
+      if (!(pages instanceof YArray)) {
+        return;
+      }
+      for (const meta of pages.toArray()) {
+        adapterConfigs.set(
+          'title:' + meta.get('id'),
+          meta.get('title')?.toString() ?? 'Untitled'
+        );
+      }
+    });
+  };
+
+  const docLinkBaseURLMiddleware: JobMiddleware = ({
+    slots,
+    adapterConfigs,
+  }) => {
+    slots.beforeExport.on(() => {
+      adapterConfigs.set('docLinkBaseUrl', `/workspace/${yRootDoc.guid}/`);
+    });
+  };
+
+  const markdownAdapter = new MarkdownAdapter(
+    new Job({
+      collection: new DocCollection({
+        id: 'indexer',
+        schema: blocksuiteSchema,
+      }),
+      middlewares: [docLinkBaseURLMiddleware, titleMiddleware],
+    })
+  );
+
+  const markdownPreviewCache = new WeakMap<BlockDocumentInfo, string | null>();
+  const generateMarkdownPreview = async (block: BlockDocumentInfo) => {
+    if (markdownPreviewCache.has(block)) {
+      return markdownPreviewCache.get(block);
+    }
+    const flavour = block.flavour;
+    let markdown: string | null = null;
+    if (
+      flavour === 'affine:paragraph' ||
+      flavour === 'affine:list' ||
+      flavour === 'affine:code'
+    ) {
+      const draftModel = yblockToDraftModal(block.yblock);
+      markdown =
+        block.parentFlavour === 'affine:database'
+          ? `database · ${block.additional?.databaseName}\n`
+          : ((draftModel ? await markdownAdapter.fromBlock(draftModel) : null)
+              ?.file ?? null);
+    }
+    if (
+      flavour === 'affine:embed-linked-doc' ||
+      flavour === 'affine:embed-synced-doc'
+    ) {
+      markdown = '🔗\n';
+    }
+    if (flavour === 'affine:attachment') {
+      markdown = '📃\n';
+    }
+    if (flavour === 'affine:image') {
+      markdown = '🖼️\n';
+    }
+    markdownPreviewCache.set(block, markdown);
+    return markdown;
+  };
+
+  return generateMarkdownPreview;
+}
 
 async function crawlingDocData({
   docBuffer,
@@ -209,6 +239,8 @@ async function crawlingDocData({
     let summaryLenNeeded = 1000;
     let summary = '';
     const blockDocuments: BlockDocumentInfo[] = [];
+
+    const generateMarkdownPreview = generateMarkdownPreviewBuilder(yRootDoc);
 
     const blocks = ydoc.getMap<any>('blocks');
 
@@ -466,7 +498,7 @@ async function crawlingDocData({
     const TARGET_FOLLOW_BLOCK = 4;
     for (let i = 0; i < blockDocuments.length; i++) {
       const block = blockDocuments[i];
-      if (block.ref) {
+      if (block.ref?.length) {
         // only generate markdown preview for reference blocks
         let previewText = (await generateMarkdownPreview(block)) ?? '';
         let previousBlock = 0;
