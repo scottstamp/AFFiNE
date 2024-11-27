@@ -18,7 +18,7 @@ globalStyle('body', {
   overflowY: 'unset',
 });
 globalStyle('body:has(#app-tabs)', {
-  paddingBottom: globalVars.appTabHeight,
+  paddingBottom: `calc(${globalVars.appTabHeight} + env(safe-area-inset-bottom))`,
 });
 globalStyle('html', {
   height: '100dvh',
