@@ -15,7 +15,7 @@
     "tests/affine-legacy/*"
   ],
   "engines": {
-    "node": "<21.0.0"
+    "node": "<23.0.0"
   },
   "scripts": {
     "dev": "yarn workspace @affine/cli dev",
@@ -64,7 +64,7 @@
     "@toeverything/infra": "workspace:*",
     "@types/affine__env": "workspace:*",
     "@types/eslint": "^9.0.0",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.6.0",
     "@typescript-eslint/parser": "^7.6.0",
     "@vanilla-extract/vite-plugin": "^4.0.7",

@@ -102,7 +102,7 @@
     "@types/lodash-es": "^4.17.12",
     "@types/mixpanel": "^2.14.8",
     "@types/mustache": "^4.2.5",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.14",
     "@types/on-headers": "^1.0.3",
     "@types/sinon": "^17.0.3",

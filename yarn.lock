@@ -246,7 +246,7 @@ __metadata:
   dependencies:
     "@napi-rs/simple-git": "npm:^0.1.18"
     "@slack/web-api": "npm:^7.3.4"
-    "@types/node": "npm:^20.14.12"
+    "@types/node": "npm:^22.0.0"
     changelogithub: "npm:^0.13.11"
     jsx-slack: "npm:^6.1.2"
     marked: "npm:^15.0.0"
@@ -382,7 +382,7 @@ __metadata:
   resolution: "@affine/copilot-result@workspace:tools/copilot-result"
   dependencies:
     "@slack/web-api": "npm:^7.3.4"
-    "@types/node": "npm:^20.14.12"
+    "@types/node": "npm:^22.0.0"
     jsx-slack: "npm:^6.1.1"
     marked: "npm:^15.0.0"
   languageName: unknown
@@ -666,7 +666,7 @@ __metadata:
     "@toeverything/infra": "workspace:*"
     "@types/affine__env": "workspace:*"
     "@types/eslint": "npm:^9.0.0"
-    "@types/node": "npm:^20.12.7"
+    "@types/node": "npm:^22.0.0"
     "@typescript-eslint/eslint-plugin": "npm:^7.6.0"
     "@typescript-eslint/parser": "npm:^7.6.0"
     "@vanilla-extract/vite-plugin": "npm:^4.0.7"
@@ -706,7 +706,7 @@ __metadata:
   resolution: "@affine/native@workspace:packages/frontend/native"
   dependencies:
     "@napi-rs/cli": "npm:3.0.0-alpha.64"
-    "@types/node": "npm:^20.12.7"
+    "@types/node": "npm:^22.0.0"
     ava: "npm:^6.1.2"
     nx: "npm:^20.0.3"
     ts-node: "npm:^10.9.2"
@@ -735,7 +735,7 @@ __metadata:
   dependencies:
     "@googleapis/androidpublisher": "npm:^22.0.0"
     "@oxc-node/core": "npm:^0.0.15"
-    "@types/node": "npm:^20.14.12"
+    "@types/node": "npm:^22.0.0"
     typescript: "npm:^5.6.3"
   languageName: unknown
   linkType: soft
@@ -805,7 +805,7 @@ __metadata:
     "@types/lodash-es": "npm:^4.17.12"
     "@types/mixpanel": "npm:^2.14.8"
     "@types/mustache": "npm:^4.2.5"
-    "@types/node": "npm:^20.12.7"
+    "@types/node": "npm:^22.0.0"
     "@types/nodemailer": "npm:^6.4.14"
     "@types/on-headers": "npm:^1.0.3"
     "@types/sinon": "npm:^17.0.3"
@@ -13735,7 +13735,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:>=13.7.0, @types/node@npm:>=18.0.0, @types/node@npm:>=8.1.0":
+"@types/node@npm:*, @types/node@npm:>=10.0.0, @types/node@npm:>=13.7.0, @types/node@npm:>=18.0.0, @types/node@npm:>=8.1.0, @types/node@npm:^22.0.0":
   version: 22.10.0
   resolution: "@types/node@npm:22.10.0"
   dependencies:
@@ -13753,7 +13753,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.12.7, @types/node@npm:^20.14.12, @types/node@npm:^20.9.0":
+"@types/node@npm:^20.9.0":
   version: 20.17.8
   resolution: "@types/node@npm:20.17.8"
   dependencies:
