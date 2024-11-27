@@ -89,7 +89,11 @@ interface BlockDocumentInfo {
   markdownPreview?: string;
 }
 
-function generateMarkdownPreviewBuilder(yRootDoc: YDoc, workspaceId: string) {
+function generateMarkdownPreviewBuilder(
+  yRootDoc: YDoc,
+  workspaceId: string,
+  blocks: BlockDocumentInfo[]
+) {
   function yblockToDraftModal(yblock: YBlock): DraftModel | null {
     const flavour = yblock.get('sys:flavour');
     const blockSchema = blocksuiteSchema.flavourSchemaMap.get(flavour);
@@ -145,12 +149,57 @@ function generateMarkdownPreviewBuilder(yRootDoc: YDoc, workspaceId: string) {
   );
 
   const markdownPreviewCache = new WeakMap<BlockDocumentInfo, string | null>();
-  const generateMarkdownPreview = async (block: BlockDocumentInfo) => {
+
+  function trimCodeBlock(markdown: string) {
+    const lines = markdown.split('\n').filter(line => line.trim() !== '');
+    if (lines.length > 5) {
+      return [...lines.slice(0, 4), '...', lines.at(-1), ''].join('\n');
+    }
+    return [...lines, ''].join('\n');
+  }
+
+  function trimParagraph(markdown: string) {
+    const lines = markdown.split('\n').filter(line => line.trim() !== '');
+
+    if (lines.length > 3) {
+      return [...lines.slice(0, 3), '...', lines.at(-1), ''].join('\n');
+    }
+
+    return [...lines, ''].join('\n');
+  }
+
+  function getParentBlockCount(block: BlockDocumentInfo) {
+    let parentBlockCount = 0;
+    let currentBlock: BlockDocumentInfo | undefined = block;
+    while (currentBlock) {
+      parentBlockCount++;
+      currentBlock = blocks.find(
+        b => b.blockId === currentBlock?.parentBlockId
+      );
+    }
+    return parentBlockCount;
+  }
+
+  // only works for list block
+  function indentMarkdown(markdown: string, depth: number) {
+    return (
+      markdown
+        .split('\n')
+        .map(line => '    '.repeat(depth) + line)
+        .join('\n') + '\n'
+    );
+  }
+
+  const generateMarkdownPreview = async (
+    block: BlockDocumentInfo,
+    target?: BlockDocumentInfo
+  ) => {
     if (markdownPreviewCache.has(block)) {
       return markdownPreviewCache.get(block);
     }
     const flavour = block.flavour;
     let markdown: string | null = null;
+
     if (
       flavour === 'affine:paragraph' ||
       flavour === 'affine:list' ||
@@ -162,7 +211,23 @@ function generateMarkdownPreviewBuilder(yRootDoc: YDoc, workspaceId: string) {
           ? `database · ${block.additional?.databaseName}\n`
           : ((draftModel ? await markdownAdapter.fromBlock(draftModel) : null)
               ?.file ?? null);
+
+      if (markdown) {
+        if (flavour === 'affine:code') {
+          markdown = trimCodeBlock(markdown);
+        } else if (flavour === 'affine:paragraph') {
+          markdown = trimParagraph(markdown);
+        }
+      }
     }
+
+    if (flavour === 'affine:list' && markdown) {
+      const depth = target
+        ? getParentBlockCount(block) - getParentBlockCount(target)
+        : 0;
+      markdown = indentMarkdown(markdown ?? '', depth);
+    }
+
     if (
       flavour === 'affine:embed-linked-doc' ||
       flavour === 'affine:embed-synced-doc'
@@ -236,7 +301,8 @@ async function crawlingDocData({
 
     const generateMarkdownPreview = generateMarkdownPreviewBuilder(
       yRootDoc,
-      rootDocId
+      rootDocId,
+      blockDocuments
     );
 
     const blocks = ydoc.getMap<any>('blocks');
@@ -496,8 +562,9 @@ async function crawlingDocData({
     for (let i = 0; i < blockDocuments.length; i++) {
       const block = blockDocuments[i];
       if (block.ref?.length) {
+        const target = block;
         // only generate markdown preview for reference blocks
-        let previewText = (await generateMarkdownPreview(block)) ?? '';
+        let previewText = (await generateMarkdownPreview(target)) ?? '';
         let previousBlock = 0;
         let followBlock = 0;
         let previousIndex = i;
@@ -518,7 +585,7 @@ async function crawlingDocData({
             const block =
               previousIndex >= 0 ? blockDocuments.at(previousIndex) : null;
             const markdown = block
-              ? await generateMarkdownPreview(block)
+              ? await generateMarkdownPreview(block, target)
               : null;
             if (
               markdown &&
@@ -535,7 +602,7 @@ async function crawlingDocData({
             followIndex++;
             const block = blockDocuments.at(followIndex);
             const markdown = block
-              ? await generateMarkdownPreview(block)
+              ? await generateMarkdownPreview(block, target)
               : null;
             if (
               markdown &&
@@ -550,6 +617,7 @@ async function crawlingDocData({
         }
 
         block.markdownPreview = previewText;
+        console.log(block.blockId, previewText);
       }
     }
     // #endregion
