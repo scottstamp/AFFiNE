@@ -7,6 +7,7 @@ import {
 } from '@affine/core/modules/doc-link';
 import { WorkbenchLink } from '@affine/core/modules/workbench';
 import { useI18n } from '@affine/i18n';
+import type { JobMiddleware } from '@blocksuite/affine/store';
 import { ToggleExpandIcon } from '@blocksuite/icons/rc';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import {
@@ -14,6 +15,7 @@ import {
   LiveData,
   useLiveData,
   useServices,
+  WorkspaceService,
 } from '@toeverything/infra';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
@@ -49,8 +51,9 @@ const CollapsibleSection = ({
 
 export const BiDirectionalLinkPanel = () => {
   const [show, setShow] = useState(false);
-  const { docLinksService } = useServices({
+  const { docLinksService, workspaceService } = useServices({
     DocLinksService,
+    WorkspaceService,
   });
   const t = useI18n();
 
@@ -88,6 +91,33 @@ export const BiDirectionalLinkPanel = () => {
   const handleClickShow = useCallback(() => {
     setShow(!show);
   }, [show]);
+
+  const textRendererOptions = useMemo(() => {
+    const docLinkBaseURLMiddleware: JobMiddleware = ({ adapterConfigs }) => {
+      adapterConfigs.set(
+        'docLinkBaseUrl',
+        `/workspace/${workspaceService.workspace.id}`
+      );
+    };
+
+    const rootDocMetaMiddleware: JobMiddleware = ({ collection, slots }) => {
+      slots.beforeImport.on(() => {
+        workspaceService.workspace.docCollection.docs.forEach(doc => {
+          if (doc.meta && !collection.meta.getDocMeta(doc.id)) {
+            collection.meta.addDocMeta(doc.meta);
+          }
+        });
+      });
+    };
+
+    return {
+      customHeading: true,
+      additionalMiddlewares: [docLinkBaseURLMiddleware, rootDocMetaMiddleware],
+    };
+  }, [
+    workspaceService.workspace.docCollection.docs,
+    workspaceService.workspace.id,
+  ]);
 
   return (
     <div className={styles.container}>
@@ -138,9 +168,7 @@ export const BiDirectionalLinkPanel = () => {
                           className={styles.linkPreviewRenderer}
                           answer={link.markdownPreview}
                           schema={getAFFiNEWorkspaceSchema()}
-                          options={{
-                            customHeading: true,
-                          }}
+                          options={textRendererOptions}
                         />
                       </WorkbenchLink>
                     );

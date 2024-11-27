@@ -146,6 +146,7 @@ export class DocsIndexer extends Entity {
         allIndexedDocs,
         rootDocBuffer,
         reindexAll: isUpgrade,
+        rootDocId: this.workspaceId,
       });
     } else {
       const rootDocBuffer =
@@ -167,6 +168,7 @@ export class DocsIndexer extends Entity {
         docBuffer,
         storageDocId,
         rootDocBuffer,
+        rootDocId: this.workspaceId,
       });
     }
 

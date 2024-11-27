@@ -89,7 +89,7 @@ interface BlockDocumentInfo {
   markdownPreview?: string;
 }
 
-function generateMarkdownPreviewBuilder(yRootDoc: YDoc) {
+function generateMarkdownPreviewBuilder(yRootDoc: YDoc, workspaceId: string) {
   function yblockToDraftModal(yblock: YBlock): DraftModel | null {
     const flavour = yblock.get('sys:flavour');
     const blockSchema = blocksuiteSchema.flavourSchemaMap.get(flavour);
@@ -117,28 +117,21 @@ function generateMarkdownPreviewBuilder(yRootDoc: YDoc) {
     };
   }
 
-  const titleMiddleware: JobMiddleware = ({ slots, adapterConfigs }) => {
-    slots.beforeExport.on(() => {
-      const pages = yRootDoc.getMap('meta').get('pages');
-      if (!(pages instanceof YArray)) {
-        return;
-      }
-      for (const meta of pages.toArray()) {
-        adapterConfigs.set(
-          'title:' + meta.get('id'),
-          meta.get('title')?.toString() ?? 'Untitled'
-        );
-      }
-    });
+  const titleMiddleware: JobMiddleware = ({ adapterConfigs }) => {
+    const pages = yRootDoc.getMap('meta').get('pages');
+    if (!(pages instanceof YArray)) {
+      return;
+    }
+    for (const meta of pages.toArray()) {
+      adapterConfigs.set(
+        'title:' + meta.get('id'),
+        meta.get('title')?.toString() ?? 'Untitled'
+      );
+    }
   };
 
-  const docLinkBaseURLMiddleware: JobMiddleware = ({
-    slots,
-    adapterConfigs,
-  }) => {
-    slots.beforeExport.on(() => {
-      adapterConfigs.set('docLinkBaseUrl', `/workspace/${yRootDoc.guid}/`);
-    });
+  const docLinkBaseURLMiddleware: JobMiddleware = ({ adapterConfigs }) => {
+    adapterConfigs.set('docLinkBaseUrl', `/workspace/${workspaceId}`);
   };
 
   const markdownAdapter = new MarkdownAdapter(
@@ -193,6 +186,7 @@ async function crawlingDocData({
   docBuffer,
   storageDocId,
   rootDocBuffer,
+  rootDocId,
 }: WorkerInput & { type: 'doc' }): Promise<WorkerOutput> {
   if (isEmptyUpdate(rootDocBuffer)) {
     console.warn('[worker]: Empty root doc buffer');
@@ -240,7 +234,10 @@ async function crawlingDocData({
     let summary = '';
     const blockDocuments: BlockDocumentInfo[] = [];
 
-    const generateMarkdownPreview = generateMarkdownPreviewBuilder(yRootDoc);
+    const generateMarkdownPreview = generateMarkdownPreviewBuilder(
+      yRootDoc,
+      rootDocId
+    );
 
     const blocks = ydoc.getMap<any>('blocks');
 

@@ -13,6 +13,7 @@ import { WithDisposable } from '@blocksuite/affine/global/utils';
 import {
   BlockViewType,
   type Doc,
+  type JobMiddleware,
   type Query,
   type Schema,
 } from '@blocksuite/affine/store';
@@ -75,6 +76,7 @@ const customHeadingStyles = css`
 export type TextRendererOptions = {
   maxHeight?: number;
   customHeading?: boolean;
+  additionalMiddlewares?: JobMiddleware[];
 };
 
 // todo: refactor it for more general purpose usage instead of AI only?
@@ -185,7 +187,7 @@ export class TextRenderer extends WithDisposable(LitElement) {
       this._answers = [];
       const schema = this.schema ?? this.host?.std.doc.collection.schema;
       if (latestAnswer && schema) {
-        markDownToDoc(schema, latestAnswer)
+        markDownToDoc(schema, latestAnswer, this.options.additionalMiddlewares)
           .then(doc => {
             this._doc = doc.blockCollection.getDoc({
               query: this._query,
