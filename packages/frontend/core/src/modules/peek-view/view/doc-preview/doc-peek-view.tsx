@@ -169,8 +169,16 @@ function DocPeekPreviewEditor({
 }
 
 export function DocPeekPreview({ docRef }: { docRef: DocReferenceInfo }) {
-  const { docId, blockIds, elementIds, mode, xywh, databaseId, databaseRowId } =
-    docRef;
+  const {
+    docId,
+    blockIds,
+    elementIds,
+    mode,
+    xywh,
+    databaseId,
+    databaseDocId,
+    databaseRowId,
+  } = docRef;
   const { doc, editor, loading } = useEditor(
     docId,
     mode,
@@ -178,8 +186,9 @@ export function DocPeekPreview({ docRef }: { docRef: DocReferenceInfo }) {
       blockIds,
       elementIds,
     },
-    databaseId && databaseRowId
+    databaseId && databaseRowId && databaseDocId
       ? {
+          docId: databaseDocId,
           databaseId,
           databaseRowId,
           type: 'database',

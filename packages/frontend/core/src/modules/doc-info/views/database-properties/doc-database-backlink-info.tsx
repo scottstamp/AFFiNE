@@ -171,8 +171,9 @@ export const DocDatabaseBacklinkInfo = ({
   onChange,
 }: {
   defaultOpen?: {
-    databaseId: string;
+    databaseBlockId: string;
     rowId: string;
+    docId: string;
   }[];
   onChange?: (
     row: DatabaseRow,
@@ -185,8 +186,11 @@ export const DocDatabaseBacklinkInfo = ({
   const rows = useLiveData(
     useMemo(
       () =>
-        LiveData.from(docDatabaseBacklinks.watchDbBacklinkRows$(doc.id), []),
-      [docDatabaseBacklinks, doc.id]
+        LiveData.from(
+          docDatabaseBacklinks.watchDbBacklinkRows$(doc.id, defaultOpen),
+          []
+        ),
+      [docDatabaseBacklinks, doc.id, defaultOpen]
     )
   );
 
@@ -201,8 +205,9 @@ export const DocDatabaseBacklinkInfo = ({
           <DatabaseBacklinkRow
             defaultOpen={defaultOpen?.some(
               backlink =>
-                backlink.databaseId === databaseBlockId &&
-                backlink.rowId === rowId
+                backlink.databaseBlockId === databaseBlockId &&
+                backlink.rowId === rowId &&
+                backlink.docId === docId
             )}
             row$={row$}
             onChange={onChange}

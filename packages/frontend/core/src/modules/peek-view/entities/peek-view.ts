@@ -24,6 +24,7 @@ export type DocReferenceInfo = {
   blockIds?: string[];
   elementIds?: string[];
   databaseId?: string;
+  databaseDocId?: string;
   databaseRowId?: string;
   /**
    * viewport in edgeless mode

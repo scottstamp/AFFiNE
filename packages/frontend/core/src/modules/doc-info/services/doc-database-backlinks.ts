@@ -72,7 +72,6 @@ export class DocDatabaseBacklinksService extends Service {
     docId: string;
     rowId: string;
     databaseBlockId: string;
-    databaseName: string | undefined;
   }) {
     return new Observable<DatabaseRow | undefined>(subscriber => {
       let disposed = false;
@@ -128,7 +127,14 @@ export class DocDatabaseBacklinksService extends Service {
 
   // backlinks (docid:blockid:databaseBlockId)
   //   -> related db rows (DatabaseRow[])
-  watchDbBacklinkRows$(docId: string) {
+  watchDbBacklinkRows$(
+    docId: string,
+    defaultItems?: {
+      docId: string;
+      databaseBlockId: string;
+      rowId: string;
+    }[]
+  ) {
     return this.docsSearchService.watchDatabasesTo(docId).pipe(
       distinctUntilChanged(equalComparator),
       map(rows =>
@@ -136,14 +142,32 @@ export class DocDatabaseBacklinksService extends Service {
           (a, b) => a.databaseName?.localeCompare(b.databaseName ?? '') ?? 0
         )
       ),
-      map(backlinks =>
-        backlinks.map(backlink => {
+      map(backlinks => {
+        // merge default items with backlinks in indexer
+        const merged = [...(defaultItems ?? [])];
+
+        backlinks.forEach(backlink => {
+          // if the backlink is already in the merged list, skip it
+          if (
+            merged.some(
+              item =>
+                item.databaseBlockId === backlink.databaseBlockId &&
+                item.rowId === backlink.rowId &&
+                item.docId === backlink.docId
+            )
+          ) {
+            return;
+          }
+          merged.push(backlink);
+        });
+
+        return merged.map(backlink => {
           return {
             ...backlink,
             row$: this.watchDatabaseRow$(backlink),
           };
-        })
-      )
+        });
+      })
     );
   }
 }

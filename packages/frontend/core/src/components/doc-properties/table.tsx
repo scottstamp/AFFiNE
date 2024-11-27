@@ -44,6 +44,7 @@ export type DefaultOpenProperty =
     }
   | {
       type: 'database';
+      docId: string;
       databaseId: string;
       databaseRowId: string;
     };
@@ -385,8 +386,9 @@ const DocPropertiesTableInner = ({
               defaultOpenProperty?.type === 'database'
                 ? [
                     {
-                      databaseId: defaultOpenProperty.databaseId,
+                      databaseBlockId: defaultOpenProperty.databaseId,
                       rowId: defaultOpenProperty.databaseRowId,
+                      docId: defaultOpenProperty.docId,
                     },
                   ]
                 : []
