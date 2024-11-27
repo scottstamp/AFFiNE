@@ -14,7 +14,11 @@ export const NumberCell = ({
     <NumberValue
       value={value}
       onChange={v => {
-        dataSource.cellValueChange(rowId, cell.property.id, v);
+        const value = Number(v);
+        if (isNaN(value)) {
+          return;
+        }
+        dataSource.cellValueChange(rowId, cell.property.id, value);
         onChange?.(v);
       }}
     />
