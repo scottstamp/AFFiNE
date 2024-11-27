@@ -1,16 +1,8 @@
-import { IconButton, SafeArea, useIsInsideModal } from '@affine/component';
-import { ArrowLeftSmallIcon, CloseIcon } from '@blocksuite/icons/rc';
-import { useService } from '@toeverything/infra';
+import { SafeArea } from '@affine/component';
 import clsx from 'clsx';
-import {
-  forwardRef,
-  type HtmlHTMLAttributes,
-  type ReactNode,
-  useCallback,
-  useEffect,
-} from 'react';
+import { forwardRef, type HtmlHTMLAttributes, type ReactNode } from 'react';
 
-import { NavigationGestureService } from '../../modules/navigation-gesture';
+import { NavigationBackButton } from '../navigation-back';
 import * as styles from './styles.css';
 
 export interface PageHeaderProps
@@ -63,24 +55,6 @@ export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(
     },
     ref
   ) {
-    const navigationGesture = useService(NavigationGestureService);
-    const isInsideModal = useIsInsideModal();
-
-    useEffect(() => {
-      if (isInsideModal) return;
-
-      const prev = navigationGesture.enabled$.value;
-      navigationGesture.setEnabled(!!back);
-
-      return () => {
-        navigationGesture.setEnabled(prev);
-      };
-    }, [back, isInsideModal, navigationGesture]);
-
-    const handleRouteBack = useCallback(() => {
-      backAction ? backAction() : history.back();
-    }, [backAction]);
-
     return (
       <>
         <SafeArea
@@ -95,15 +69,7 @@ export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(
               className={clsx(styles.prefix, prefixClassName)}
               style={prefixStyle}
             >
-              {back ? (
-                <IconButton
-                  size={24}
-                  style={{ padding: 10 }}
-                  onClick={handleRouteBack}
-                  icon={isInsideModal ? <CloseIcon /> : <ArrowLeftSmallIcon />}
-                  data-testid="page-header-back"
-                />
-              ) : null}
+              {back ? <NavigationBackButton backAction={backAction} /> : null}
               {prefix}
             </section>
 

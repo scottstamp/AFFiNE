@@ -3,13 +3,14 @@ import {
   WorkbenchLink,
   WorkbenchService,
 } from '@affine/core/modules/workbench';
-import { AllDocsIcon, MobileHomeIcon, SearchIcon } from '@blocksuite/icons/rc';
+import { AllDocsIcon, MobileHomeIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useService } from '@toeverything/infra';
 import { assignInlineVars } from '@vanilla-extract/dynamic';
 import React from 'react';
 import type { Location } from 'react-router-dom';
 
 import { VirtualKeyboardService } from '../../modules/virtual-keyboard/services/virtual-keyboard';
+import { AppTabCreate } from './create';
 import { AppTabJournal } from './journal';
 import * as styles from './styles.css';
 
@@ -48,9 +49,8 @@ const routes: Route[] = [
     node: <AppTabJournal />,
   },
   {
-    key: 'search',
-    to: '/search',
-    Icon: SearchIcon,
+    key: 'new',
+    node: <AppTabCreate />,
   },
 ];
 

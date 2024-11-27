@@ -1,10 +1,15 @@
-import { SafeArea, useThemeColorV2 } from '@affine/component';
+import {
+  SafeArea,
+  startScopedViewTransition,
+  useThemeColorV2,
+} from '@affine/component';
 import { CollectionService } from '@affine/core/modules/collection';
 import {
   type QuickSearchItem,
   QuickSearchTagIcon,
 } from '@affine/core/modules/quicksearch';
 import { TagService } from '@affine/core/modules/tag';
+import { sleep } from '@blocksuite/affine/global/utils';
 import { ViewLayersIcon } from '@blocksuite/icons/rc';
 import {
   LiveData,
@@ -14,7 +19,12 @@ import {
 } from '@toeverything/infra';
 import { useCallback, useMemo } from 'react';
 
-import { AppTabs, SearchInput, SearchResLabel } from '../../components';
+import {
+  NavigationBackButton,
+  SearchInput,
+  SearchResLabel,
+} from '../../components';
+import { searchVTScope } from '../../components/search-input/style.css';
 import { MobileSearchService } from '../../modules/search';
 import { SearchResults } from '../../views/search/search-results';
 import * as styles from '../../views/search/style.css';
@@ -133,11 +143,20 @@ export const Component = () => {
     ]
   );
 
+  const transitionBack = useCallback(() => {
+    startScopedViewTransition(searchVTScope, async () => {
+      history.back();
+      await sleep(10);
+    });
+  }, []);
+
   return (
     <>
       <SafeArea top>
         <div className={styles.searchHeader} data-testid="search-header">
+          <NavigationBackButton backAction={transitionBack} />
           <SearchInput
+            className={styles.searchInput}
             debounce={300}
             autoFocus={!searchInput}
             value={searchInput}
@@ -147,7 +166,6 @@ export const Component = () => {
         </div>
       </SafeArea>
       {searchInput ? <WithQueryList /> : <RecentList />}
-      <AppTabs />
     </>
   );
 };

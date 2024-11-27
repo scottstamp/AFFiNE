@@ -4,6 +4,14 @@ import { style } from '@vanilla-extract/css';
 
 export const searchHeader = style({
   padding: 16,
+  paddingLeft: 8,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 4,
+});
+export const searchInput = style({
+  width: 0,
+  flex: 1,
 });
 
 export const resTitle = style([

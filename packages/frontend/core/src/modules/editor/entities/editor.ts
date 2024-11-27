@@ -229,7 +229,15 @@ export class Editor extends Entity {
         const title = docTitle?.querySelector<
           HTMLElement & { inlineEditor: InlineEditor | null }
         >('rich-text');
-        title?.inlineEditor?.focusEnd();
+        // Only focus on the title when it's empty on mobile edition.
+        if (BUILD_CONFIG.isMobileEdition) {
+          const titleText = this.doc.title$.value;
+          if (!titleText?.length) {
+            title?.inlineEditor?.focusEnd();
+          }
+        } else {
+          title?.inlineEditor?.focusEnd();
+        }
       } else {
         const selection = editorContainer.host?.std.selection;
 

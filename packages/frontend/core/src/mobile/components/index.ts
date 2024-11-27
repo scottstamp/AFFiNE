@@ -1,5 +1,6 @@
 export * from './app-tabs';
 export * from './doc-card';
+export * from './navigation-back';
 export * from './page-header';
 export * from './rename';
 export * from './search-input';

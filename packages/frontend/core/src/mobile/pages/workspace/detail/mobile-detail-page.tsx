@@ -169,7 +169,7 @@ const DetailPageImpl = () => {
 
       editor.bindEditorContainer(
         editorContainer,
-        null,
+        (editorContainer as any).docTitle, // set from proxy
         scrollViewportRef.current
       );
 
@@ -274,9 +274,7 @@ const MobileDetailPage = ({
           />
         ) : null}
         <DetailPageImpl />
-        {date ? (
-          <AppTabs background={cssVarV2('layer/background/primary')} />
-        ) : null}
+        <AppTabs background={cssVarV2('layer/background/primary')} />
       </DetailPageWrapper>
     </div>
   );
