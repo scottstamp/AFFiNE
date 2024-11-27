@@ -55,20 +55,28 @@ export const TagsEditor = ({
 }: TagsEditorProps) => {
   const t = useI18n();
   const [inputValue, setInputValue] = useState('');
-  const filteredTags = tags.filter(tag => tag.value.includes(inputValue));
+
+  const trimmedInputValue = inputValue.trim();
+
+  const filteredTags = tags.filter(tag =>
+    tag.value.toLowerCase().includes(trimmedInputValue.toLowerCase())
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const exactMatch = filteredTags.find(tag => tag.value === inputValue);
-  const showCreateTag = !exactMatch && inputValue.trim();
+  const exactMatch = filteredTags.find(tag => tag.value === trimmedInputValue);
+  const showCreateTag = !exactMatch && trimmedInputValue;
 
   // tag option candidates to show in the tag dropdown
   const tagOptions: TagOption[] = useMemo(() => {
     if (showCreateTag) {
-      return [{ create: true, value: inputValue } as const, ...filteredTags];
+      return [
+        { create: true, value: trimmedInputValue } as const,
+        ...filteredTags,
+      ];
     } else {
       return filteredTags;
     }
-  }, [filteredTags, inputValue, showCreateTag]);
+  }, [filteredTags, showCreateTag, trimmedInputValue]);
 
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const [focusedInlineIndex, setFocusedInlineIndex] = useState<number>(
