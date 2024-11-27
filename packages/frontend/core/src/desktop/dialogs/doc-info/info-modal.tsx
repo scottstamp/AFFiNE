@@ -48,11 +48,23 @@ export const InfoTable = ({
       [docId, docsSearchService]
     )
   );
+
   const backlinks = useLiveData(
-    useMemo(
-      () => LiveData.from(docsSearchService.watchRefsTo(docId), null),
-      [docId, docsSearchService]
-    )
+    useMemo(() => {
+      return LiveData.from(docsSearchService.watchRefsTo(docId), []).map(
+        links => {
+          const visitedDoc = new Set<string>();
+          // for each doc, we only show the first block
+          return links.filter(link => {
+            if (visitedDoc.has(link.docId)) {
+              return false;
+            }
+            visitedDoc.add(link.docId);
+            return true;
+          });
+        }
+      );
+    }, [docId, docsSearchService])
   );
 
   const onBacklinkPropertyChange = useCallback(

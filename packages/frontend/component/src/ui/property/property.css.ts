@@ -221,6 +221,7 @@ export const sectionContent = style({
   display: 'flex',
   flexDirection: 'column',
   gap: 4,
+  marginTop: 4,
   selectors: {
     '&[hidden]': {
       display: 'none',

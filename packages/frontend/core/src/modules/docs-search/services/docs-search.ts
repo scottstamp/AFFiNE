@@ -480,7 +480,7 @@ export class DocsSearchService extends Service {
           hits: {
             fields: ['docId', 'blockId', 'markdownPreview'],
             pagination: {
-              limit: 3, // the number of backlinks to show
+              limit: 5, // the max number of backlinks to show for each doc
             },
           },
           pagination: {
@@ -495,21 +495,23 @@ export class DocsSearchService extends Service {
               buckets.map(bucket => bucket.key)
             );
 
-            return buckets.map(bucket => {
+            return buckets.flatMap(bucket => {
               const title =
                 docData.find(doc => doc.id === bucket.key)?.get('title') ?? '';
-              const blockId = bucket.hits.nodes[0]?.fields.blockId ?? '';
-              const markdownPreview =
-                bucket.hits.nodes[0]?.fields.markdownPreview ?? '';
-              return {
-                docId: bucket.key,
-                blockId: typeof blockId === 'string' ? blockId : blockId[0],
-                title: typeof title === 'string' ? title : title[0],
-                markdownPreview:
-                  typeof markdownPreview === 'string'
-                    ? markdownPreview
-                    : markdownPreview[0],
-              };
+
+              return bucket.hits.nodes.map(node => {
+                const blockId = node.fields.blockId ?? '';
+                const markdownPreview = node.fields.markdownPreview ?? '';
+                return {
+                  docId: bucket.key,
+                  blockId: typeof blockId === 'string' ? blockId : blockId[0],
+                  title: typeof title === 'string' ? title : title[0],
+                  markdownPreview:
+                    typeof markdownPreview === 'string'
+                      ? markdownPreview
+                      : markdownPreview[0],
+                };
+              });
             });
           });
         })
