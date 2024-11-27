@@ -562,3 +562,36 @@ model RuntimeConfig {
   @@unique([module, key])
   @@map("app_runtime_settings")
 }
+
+model License {
+  key                  String    @id @map("key") @db.VarChar
+  // we won't ask user to sign up to buy a selfhost license, so we can't reference User model by userId here
+  email                String    @map("email") @db.VarChar
+  // stripe subscription id, null for one time payment
+  stripeSubscriptionId String?   @map("stripe_subscription_id") @db.VarChar
+  recurring            String    @db.VarChar(20)
+  plan                 String    @db.VarChar(20)
+  variant              String?   @db.VarChar(20)
+  quantity             Int       @db.Integer
+  status               String    @db.VarChar(20)
+  installed            Boolean   @default(false)
+  start                DateTime  @map("start") @db.Timestamptz(3)
+  end                  DateTime? @map("end") @db.Timestamptz(3)
+  nextBillAt           DateTime? @map("next_bill_at") @db.Timestamptz(3)
+  canceledAt           DateTime? @map("canceled_at") @db.Timestamptz(3)
+  trialStart           DateTime? @map("trial_start") @db.Timestamptz(3)
+  trialEnd             DateTime? @map("trial_end") @db.Timestamptz(3)
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("licenses")
+}
+
+model InstalledLicense {
+  key           String    @id @map("key") @db.VarChar
+  workspaceId   String    @map("workspace_id") @db.VarChar
+  installedAt   DateTime  @default(now()) @map("installed_at") @db.Timestamptz(3)
+  revalidatedAt DateTime? @map("revalidated_at") @db.Timestamptz(3)
+
+  @@map("installed_licenses")
+}
