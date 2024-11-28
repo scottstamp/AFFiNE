@@ -22,11 +22,17 @@ import { QuotaManagementService } from './storage';
     QuotaManagementResolver,
     QuotaManagementService,
   ],
-  exports: [QuotaService, QuotaManagementService],
+  exports: [QuotaService, QuotaOverrideService, QuotaManagementService],
 })
 export class QuotaModule {}
 
 export { QuotaManagementService, QuotaService };
-export { QuotaOverride } from './override';
+export { OneGB, OneMB } from './constant';
+export { QuotaOverride, QuotaOverrideService } from './override';
 export { Quota_FreePlanV1_1, Quota_ProPlanV1 } from './schema';
-export { type QuotaBusinessType, QuotaQueryType, QuotaType } from './types';
+export {
+  formatSize,
+  type QuotaBusinessType,
+  QuotaQueryType,
+  QuotaType,
+} from './types';

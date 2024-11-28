@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 
+import { FeatureType } from '../features';
 import type { QuotaBusinessType } from './types';
 
 export abstract class QuotaOverride {
-  abstract get name(): string;
   abstract overrideQuota(
     ownerId: string,
     workspaceId: string,
+    features: FeatureType[],
     quota: QuotaBusinessType
   ): QuotaBusinessType;
 }
@@ -22,11 +23,15 @@ export class QuotaOverrideService {
   overrideQuota(
     ownerId: string,
     workspaceId: string,
+    features: FeatureType[],
     quota: QuotaBusinessType
   ): QuotaBusinessType {
-    return this.overrides.reduce(
-      (acc, override) => override.overrideQuota(ownerId, workspaceId, acc),
-      quota
-    );
+    return this.overrides
+      .filter(o => typeof o.overrideQuota === 'function')
+      .reduce(
+        (quota, override) =>
+          override.overrideQuota(ownerId, workspaceId, features, quota),
+        quota
+      );
   }
 }

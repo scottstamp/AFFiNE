@@ -3,7 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FeatureService, FeatureType } from '../features';
 import { PermissionService } from '../permission';
 import { WorkspaceBlobStorage } from '../storage';
-import { OneGB, OneMB } from './constant';
+import { OneGB } from './constant';
 import { QuotaOverrideService } from './override';
 import { QuotaService } from './service';
 import { formatSize, type QuotaBusinessType } from './types';
@@ -128,14 +128,10 @@ export class QuotaManagementService {
     const usedSize = await this.getUserUsage(owner.id);
     // relax restrictions if workspace has unlimited feature
     // todo(@darkskygit): need a mechanism to allow feature as a middleware to edit quota
-    const unlimited = await this.feature.hasWorkspaceFeature(
-      workspaceId,
-      FeatureType.UnlimitedWorkspace
-    );
-    const team = await this.feature.hasWorkspaceFeature(
-      workspaceId,
-      FeatureType.TeamWorkspace
-    );
+    const features = await this.feature
+      .getWorkspaceFeatures(workspaceId)
+      .then(f => f.map(f => f.feature.name));
+    const unlimited = features.includes(FeatureType.UnlimitedWorkspace);
 
     const quota = {
       name,
@@ -147,41 +143,15 @@ export class QuotaManagementService {
       copilotActionLimit,
       humanReadable,
       usedSize,
-      team,
       unlimited,
       memberCount,
     };
 
     if (quota.unlimited) {
       return this.mergeUnlimitedQuota(quota);
-    } else if (quota.team) {
-      return this.override.overrideQuota(
-        owner.id,
-        workspaceId,
-        this.mergeTeamQuota(quota)
-      );
     }
 
-    return quota;
-  }
-
-  private mergeTeamQuota(orig: QuotaBusinessType): QuotaBusinessType {
-    const storageQuota = 100 * OneGB;
-    const blobLimit = 500 * OneMB;
-    // need update blob/member/storage limit with subscription
-    return {
-      ...orig,
-      storageQuota,
-      blobLimit,
-      businessBlobLimit: blobLimit,
-      memberLimit: orig.memberCount,
-      humanReadable: {
-        ...orig.humanReadable,
-        name: 'Team',
-        blobLimit: formatSize(blobLimit),
-        storageQuota: formatSize(storageQuota),
-      },
-    };
+    return this.override.overrideQuota(owner.id, workspaceId, features, quota);
   }
 
   private mergeUnlimitedQuota(orig: QuotaBusinessType): QuotaBusinessType {

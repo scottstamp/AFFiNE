@@ -123,6 +123,5 @@ export function formatDate(ms: number): string {
 
 export type QuotaBusinessType = QuotaQueryType & {
   businessBlobLimit: number;
-  team: boolean;
   unlimited: boolean;
 };

@@ -291,6 +291,7 @@ enum FeatureType {
   Admin
   Copilot
   EarlyAccess
+  TeamWorkspace
   UnlimitedCopilot
   UnlimitedWorkspace
 }
