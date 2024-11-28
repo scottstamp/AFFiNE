@@ -122,7 +122,6 @@ const DatabaseBacklinkRow = ({
 
   return (
     <PropertyCollapsibleSection
-      // @ts-expect-error fix type
       title={
         <span className={styles.databaseNameWrapper}>
           <span className={styles.databaseName}>

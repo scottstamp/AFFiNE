@@ -39,7 +39,7 @@ export const PropertyCollapsibleSection = forwardRef<
     collapsed?: boolean;
     onCollapseChange?: (collapsed: boolean) => void;
   }> &
-    HTMLProps<HTMLDivElement>
+    Omit<HTMLProps<HTMLDivElement>, 'title'>
 >(
   (
     {
