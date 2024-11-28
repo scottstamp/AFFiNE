@@ -67,6 +67,7 @@ export const BiDirectionalLinkPanel = () => {
       }
 
       const links = get(docLinksService.backlinks.backlinks$);
+
       // group by docId
       const groupedLinks = links.reduce(
         (acc, link) => {
@@ -100,6 +101,8 @@ export const BiDirectionalLinkPanel = () => {
       );
     };
 
+    // todo: consider refactor
+    // better way to overwrite the renderer
     const rootDocMetaMiddleware: JobMiddleware = ({ collection, slots }) => {
       slots.beforeImport.on(() => {
         workspaceService.workspace.docCollection.docs.forEach(doc => {

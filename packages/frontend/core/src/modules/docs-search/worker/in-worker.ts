@@ -171,17 +171,31 @@ function generateMarkdownPreviewBuilder(
   function getParentBlockCount(block: BlockDocumentInfo) {
     let parentBlockCount = 0;
     let currentBlock: BlockDocumentInfo | undefined = block;
-    while (currentBlock) {
-      parentBlockCount++;
+    do {
       currentBlock = blocks.find(
         b => b.blockId === currentBlock?.parentBlockId
       );
-    }
+
+      // reach the root block. do not count it.
+      if (
+        !currentBlock ||
+        currentBlock.flavour === 'affine:page' ||
+        currentBlock.flavour === 'affine:note' ||
+        currentBlock.flavour === 'affine:surface'
+      ) {
+        break;
+      }
+      parentBlockCount++;
+    } while (currentBlock);
     return parentBlockCount;
   }
 
   // only works for list block
   function indentMarkdown(markdown: string, depth: number) {
+    if (depth <= 0) {
+      return markdown;
+    }
+
     return (
       markdown
         .split('\n')
@@ -222,10 +236,14 @@ function generateMarkdownPreviewBuilder(
     }
 
     if (flavour === 'affine:list' && markdown) {
-      const depth = target
-        ? getParentBlockCount(block) - getParentBlockCount(target)
-        : 0;
-      markdown = indentMarkdown(markdown ?? '', depth);
+      const blockDepth = getParentBlockCount(block);
+      const targetDepth = target ? getParentBlockCount(target) : blockDepth;
+
+      const depth = targetDepth ? blockDepth - targetDepth : 0;
+      markdown = indentMarkdown(
+        markdown ?? '',
+        targetDepth > 0 ? depth + 1 : depth
+      );
     }
 
     if (
@@ -617,7 +635,6 @@ async function crawlingDocData({
         }
 
         block.markdownPreview = previewText;
-        console.log(block.blockId, previewText);
       }
     }
     // #endregion
