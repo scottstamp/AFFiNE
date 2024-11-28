@@ -143,9 +143,9 @@ export const Quotas: Quota[] = [
     configs: {
       // quota name
       name: 'Restricted',
-      // single blob limit 10MB
+      // single blob limit 1MB
       blobLimit: OneMB,
-      // total blob limit 1GB
+      // total blob limit 10MB
       storageQuota: 10 * OneMB,
       // history period of validity 30 days
       historyPeriod: 30 * OneDay,

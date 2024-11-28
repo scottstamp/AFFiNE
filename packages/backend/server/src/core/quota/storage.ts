@@ -151,7 +151,12 @@ export class QuotaManagementService {
       return this.mergeUnlimitedQuota(quota);
     }
 
-    return this.override.overrideQuota(owner.id, workspaceId, features, quota);
+    return await this.override.overrideQuota(
+      owner.id,
+      workspaceId,
+      features,
+      quota
+    );
   }
 
   private mergeUnlimitedQuota(orig: QuotaBusinessType): QuotaBusinessType {
