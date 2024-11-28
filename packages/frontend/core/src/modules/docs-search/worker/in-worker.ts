@@ -797,7 +797,6 @@ async function crawlingDocData({
         }
 
         block.markdownPreview = previewText;
-        console.log('previewText\n', previewText);
       }
     }
     // #endregion
