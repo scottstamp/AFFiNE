@@ -94,13 +94,13 @@ interface BlockDocumentInfo {
   markdownPreview?: string;
 }
 
-const bookmarkFlavours = [
+const bookmarkFlavours = new Set([
   'affine:bookmark',
   'affine:embed-youtube',
   'affine:embed-figma',
   'affine:embed-github',
   'affine:embed-loom',
-];
+]);
 
 function generateMarkdownPreviewBuilder(
   yRootDoc: YDoc,
@@ -294,8 +294,8 @@ function generateMarkdownPreviewBuilder(
       model: DraftModel | null
     ): model is DraftModel<EmbedBlockModel> => {
       return (
-        block.flavour === 'affine:embed-linked-doc' ||
-        block.flavour === 'affine:embed-synced-doc'
+        model?.flavour === 'affine:embed-linked-doc' ||
+        model?.flavour === 'affine:embed-synced-doc'
       );
     };
 
@@ -324,7 +324,7 @@ function generateMarkdownPreviewBuilder(
     const isBookmarkModel = (
       model: DraftModel | null
     ): model is DraftModel<BookmarkBlockModel> => {
-      return bookmarkFlavours.includes(model?.flavour ?? '');
+      return bookmarkFlavours.has(model?.flavour ?? '');
     };
 
     const draftModel = yblockToDraftModal(block.yblock);
@@ -407,7 +407,7 @@ function generateMarkdownPreviewBuilder(
       // skip
     } else if (flavour === 'affine:latex') {
       markdown = generateLatexMarkdownPreview(block);
-    } else if (bookmarkFlavours.includes(flavour)) {
+    } else if (bookmarkFlavours.has(flavour)) {
       markdown = generateBookmarkMarkdownPreview(block);
     } else {
       console.warn(`unknown flavour: ${flavour}`);
