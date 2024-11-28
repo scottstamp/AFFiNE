@@ -97,7 +97,6 @@ function yblockToDraftModal(yblock: YBlock): DraftModel | null {
     keys: Array.from(yblock.keys())
       .filter(key => key.startsWith('prop:'))
       .map(key => key.substring(5)),
-    page: null as any,
   };
 }
 
