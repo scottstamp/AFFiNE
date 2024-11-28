@@ -1,5 +1,7 @@
 import {
   type AffineTextAttributes,
+  type DatabaseBlockModel,
+  type ImageBlockModel,
   MarkdownAdapter,
 } from '@blocksuite/affine/blocks';
 import {
@@ -134,8 +136,16 @@ function generateMarkdownPreviewBuilder(
     }
   };
 
+  const baseUrl = `/workspace/${workspaceId}`;
+
+  function getDocLink(docId: string, blockId: string) {
+    const searchParams = new URLSearchParams();
+    searchParams.set('blockIds', blockId);
+    return `${baseUrl}/${docId}?${searchParams.toString()}`;
+  }
+
   const docLinkBaseURLMiddleware: JobMiddleware = ({ adapterConfigs }) => {
-    adapterConfigs.set('docLinkBaseUrl', `/workspace/${workspaceId}`);
+    adapterConfigs.set('docLinkBaseUrl', baseUrl);
   };
 
   const markdownAdapter = new MarkdownAdapter(
@@ -204,6 +214,81 @@ function generateMarkdownPreviewBuilder(
     );
   }
 
+  const generateDatabaseMarkdownPreview = (block: BlockDocumentInfo) => {
+    const isDatabaseModel = (
+      model: DraftModel | null
+    ): model is DraftModel<DatabaseBlockModel> => {
+      return model?.flavour === 'affine:database';
+    };
+
+    const model = yblockToDraftModal(block.yblock);
+
+    if (!model) {
+      return null;
+    }
+
+    let databaseModel: DraftModel<DatabaseBlockModel> | null = null;
+
+    if (isDatabaseModel(model)) {
+      databaseModel = model;
+    } else {
+      const parentBlock = blocks.find(b => b.blockId === block.parentBlockId);
+
+      if (parentBlock) {
+        const parentModel = yblockToDraftModal(parentBlock.yblock);
+        if (isDatabaseModel(parentModel)) {
+          databaseModel = parentModel;
+        }
+      }
+    }
+
+    if (!databaseModel) {
+      return null;
+    }
+
+    const url = getDocLink(block.docId, databaseModel.id);
+    const title = databaseModel.title;
+
+    return `[database · ${title}][](${url})\n`;
+  };
+
+  const generateImageMarkdownPreview = (block: BlockDocumentInfo) => {
+    const isImageModel = (
+      model: DraftModel | null
+    ): model is DraftModel<ImageBlockModel> => {
+      return model?.flavour === 'affine:image';
+    };
+
+    const model = yblockToDraftModal(block.yblock);
+
+    if (!isImageModel(model)) {
+      return null;
+    }
+
+    const info = ['an image block'];
+
+    if (model.sourceId) {
+      info.push(`file id ${model.sourceId}`);
+    }
+
+    if (model.caption) {
+      info.push(`with caption ${model.caption}`);
+    }
+
+    return info.join(', ') + '\n';
+  };
+
+  const generateLatexMarkdownPreview = (block: BlockDocumentInfo) => {
+    let content =
+      typeof block.content === 'string'
+        ? block.content.trim()
+        : block.content?.join('').trim();
+
+    content = content?.split('\n').join(' ') ?? '';
+
+    return `LaTeX, with value ${content}\n`;
+  };
+
   const generateMarkdownPreview = async (
     block: BlockDocumentInfo,
     target?: BlockDocumentInfo
@@ -222,7 +307,7 @@ function generateMarkdownPreviewBuilder(
       const draftModel = yblockToDraftModal(block.yblock);
       markdown =
         block.parentFlavour === 'affine:database'
-          ? `database · ${block.additional?.databaseName}\n`
+          ? generateDatabaseMarkdownPreview(block)
           : ((draftModel ? await markdownAdapter.fromBlock(draftModel) : null)
               ?.file ?? null);
 
@@ -233,30 +318,35 @@ function generateMarkdownPreviewBuilder(
           markdown = trimParagraph(markdown);
         }
       }
-    }
 
-    if (flavour === 'affine:list' && markdown) {
-      const blockDepth = getParentBlockCount(block);
-      const targetDepth = target ? getParentBlockCount(target) : blockDepth;
+      // only list can have indent
+      if (flavour === 'affine:list' && markdown) {
+        const blockDepth = getParentBlockCount(block);
+        const targetDepth = target ? getParentBlockCount(target) : blockDepth;
 
-      const depth = targetDepth ? blockDepth - targetDepth : 0;
-      markdown = indentMarkdown(
-        markdown ?? '',
-        targetDepth > 0 ? depth + 1 : depth
-      );
-    }
-
-    if (
+        const depth = targetDepth ? blockDepth - targetDepth : 0;
+        markdown = indentMarkdown(
+          markdown ?? '',
+          targetDepth > 0 ? depth + 1 : depth
+        );
+      }
+    } else if (flavour === 'affine:database') {
+      markdown = generateDatabaseMarkdownPreview(block);
+    } else if (
       flavour === 'affine:embed-linked-doc' ||
       flavour === 'affine:embed-synced-doc'
     ) {
       markdown = '🔗\n';
-    }
-    if (flavour === 'affine:attachment') {
+    } else if (flavour === 'affine:attachment') {
       markdown = '📃\n';
-    }
-    if (flavour === 'affine:image') {
-      markdown = '🖼️\n';
+    } else if (flavour === 'affine:image') {
+      markdown = generateImageMarkdownPreview(block);
+    } else if (flavour === 'affine:surface' || flavour === 'affine:page') {
+      // skip
+    } else if (flavour === 'affine:latex') {
+      markdown = generateLatexMarkdownPreview(block);
+    } else {
+      console.warn(`unknown flavour: ${flavour}`);
     }
     markdownPreviewCache.set(block, markdown);
     return markdown;
@@ -570,6 +660,16 @@ async function crawlingDocData({
           yblock: block,
         });
       }
+
+      if (flavour === 'affine:latex') {
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
+          content: block.get('prop:latex')?.toString() ?? '',
+          yblock: block,
+        });
+      }
     }
     // #endregion
 
@@ -611,7 +711,7 @@ async function crawlingDocData({
                 markdown
               ) /* A small hack to skip blocks with the same content */
             ) {
-              previewText = markdown + previewText;
+              previewText = markdown + '\n' + previewText;
               previousBlock++;
             }
           }
@@ -628,13 +728,14 @@ async function crawlingDocData({
                 markdown
               ) /* A small hack to skip blocks with the same content */
             ) {
-              previewText = previewText + markdown;
+              previewText = previewText + '\n' + markdown;
               followBlock++;
             }
           }
         }
 
         block.markdownPreview = previewText;
+        console.log('previewText\n', previewText);
       }
     }
     // #endregion
