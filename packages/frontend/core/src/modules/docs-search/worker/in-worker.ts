@@ -1,9 +1,12 @@
-import {
-  type AffineTextAttributes,
-  type DatabaseBlockModel,
-  type ImageBlockModel,
-  MarkdownAdapter,
+import type {
+  AffineTextAttributes,
+  AttachmentBlockModel,
+  BookmarkBlockModel,
+  DatabaseBlockModel,
+  EmbedBlockModel,
+  ImageBlockModel,
 } from '@blocksuite/affine/blocks';
+import { MarkdownAdapter } from '@blocksuite/affine/blocks';
 import {
   createYProxy,
   DocCollection,
@@ -90,6 +93,14 @@ interface BlockDocumentInfo {
   yblock: YMap<any>;
   markdownPreview?: string;
 }
+
+const bookmarkFlavours = [
+  'affine:bookmark',
+  'affine:embed-youtube',
+  'affine:embed-figma',
+  'affine:embed-github',
+  'affine:embed-loom',
+];
 
 function generateMarkdownPreviewBuilder(
   yRootDoc: YDoc,
@@ -278,6 +289,26 @@ function generateMarkdownPreviewBuilder(
     return info.join(', ') + '\n';
   };
 
+  const generateEmbedMarkdownPreview = (block: BlockDocumentInfo) => {
+    const isEmbedModel = (
+      model: DraftModel | null
+    ): model is DraftModel<EmbedBlockModel> => {
+      return (
+        block.flavour === 'affine:embed-linked-doc' ||
+        block.flavour === 'affine:embed-synced-doc'
+      );
+    };
+
+    const draftModel = yblockToDraftModal(block.yblock);
+    if (!isEmbedModel(draftModel)) {
+      return null;
+    }
+
+    const url = getDocLink(block.docId, draftModel.id);
+
+    return `[](${url})\n`;
+  };
+
   const generateLatexMarkdownPreview = (block: BlockDocumentInfo) => {
     let content =
       typeof block.content === 'string'
@@ -287,6 +318,37 @@ function generateMarkdownPreviewBuilder(
     content = content?.split('\n').join(' ') ?? '';
 
     return `LaTeX, with value ${content}\n`;
+  };
+
+  const generateBookmarkMarkdownPreview = (block: BlockDocumentInfo) => {
+    const isBookmarkModel = (
+      model: DraftModel | null
+    ): model is DraftModel<BookmarkBlockModel> => {
+      return bookmarkFlavours.includes(model?.flavour ?? '');
+    };
+
+    const draftModel = yblockToDraftModal(block.yblock);
+    if (!isBookmarkModel(draftModel)) {
+      return null;
+    }
+    const title = draftModel.title;
+    const url = draftModel.url;
+    return `[${title}](${url})\n`;
+  };
+
+  const generateAttachmentMarkdownPreview = (block: BlockDocumentInfo) => {
+    const isAttachmentModel = (
+      model: DraftModel | null
+    ): model is DraftModel<AttachmentBlockModel> => {
+      return model?.flavour === 'affine:attachment';
+    };
+
+    const draftModel = yblockToDraftModal(block.yblock);
+    if (!isAttachmentModel(draftModel)) {
+      return null;
+    }
+
+    return `[${draftModel.name}](${draftModel.sourceId})\n`;
   };
 
   const generateMarkdownPreview = async (
@@ -336,15 +398,17 @@ function generateMarkdownPreviewBuilder(
       flavour === 'affine:embed-linked-doc' ||
       flavour === 'affine:embed-synced-doc'
     ) {
-      markdown = '🔗\n';
+      markdown = generateEmbedMarkdownPreview(block);
     } else if (flavour === 'affine:attachment') {
-      markdown = '📃\n';
+      markdown = generateAttachmentMarkdownPreview(block);
     } else if (flavour === 'affine:image') {
       markdown = generateImageMarkdownPreview(block);
     } else if (flavour === 'affine:surface' || flavour === 'affine:page') {
       // skip
     } else if (flavour === 'affine:latex') {
       markdown = generateLatexMarkdownPreview(block);
+    } else if (bookmarkFlavours.includes(flavour)) {
+      markdown = generateBookmarkMarkdownPreview(block);
     } else {
       console.warn(`unknown flavour: ${flavour}`);
     }
@@ -476,9 +540,7 @@ async function crawlingDocData({
           content: docTitle,
           yblock: block,
         });
-      }
-
-      if (
+      } else if (
         flavour === 'affine:paragraph' ||
         flavour === 'affine:list' ||
         flavour === 'affine:code'
@@ -538,9 +600,7 @@ async function crawlingDocData({
           summary += text.toString();
           summaryLenNeeded -= text.length;
         }
-      }
-
-      if (
+      } else if (
         flavour === 'affine:embed-linked-doc' ||
         flavour === 'affine:embed-synced-doc'
       ) {
@@ -559,9 +619,10 @@ async function crawlingDocData({
             yblock: block,
           });
         }
-      }
-
-      if (flavour === 'affine:attachment' || flavour === 'affine:image') {
+      } else if (
+        flavour === 'affine:attachment' ||
+        flavour === 'affine:image'
+      ) {
         const blobId = block.get('prop:sourceId');
         if (typeof blobId === 'string') {
           blockDocuments.push({
@@ -574,9 +635,7 @@ async function crawlingDocData({
             yblock: block,
           });
         }
-      }
-
-      if (flavour === 'affine:surface') {
+      } else if (flavour === 'affine:surface') {
         const texts = [];
 
         const elementsObj = block.get('prop:elements');
@@ -614,9 +673,7 @@ async function crawlingDocData({
           parentBlockId,
           yblock: block,
         });
-      }
-
-      if (flavour === 'affine:database') {
+      } else if (flavour === 'affine:database') {
         const texts = [];
         const columnsObj = block.get('prop:columns');
         const databaseTitle = block.get('prop:title');
@@ -659,14 +716,19 @@ async function crawlingDocData({
           content: texts,
           yblock: block,
         });
-      }
-
-      if (flavour === 'affine:latex') {
+      } else if (flavour === 'affine:latex') {
         blockDocuments.push({
           docId,
           flavour,
           blockId,
           content: block.get('prop:latex')?.toString() ?? '',
+          yblock: block,
+        });
+      } else if (bookmarkFlavours.includes(flavour)) {
+        blockDocuments.push({
+          docId,
+          flavour,
+          blockId,
           yblock: block,
         });
       }
