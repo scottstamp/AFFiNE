@@ -1,4 +1,4 @@
-import { createReactComponentFromLit } from '@affine/component';
+import { Button, createReactComponentFromLit } from '@affine/component';
 import { TextRenderer } from '@affine/core/blocksuite/presets';
 import {
   type Backlink,
@@ -132,9 +132,11 @@ export const BiDirectionalLinkPanel = () => {
 
       <div className={styles.titleLine}>
         <div className={styles.title}>Bi-Directional Links</div>
-        <div className={styles.showButton} onClick={handleClickShow}>
-          {show ? 'Hide' : 'Show'}
-        </div>
+        <Button className={styles.showButton} onClick={handleClickShow}>
+          {show
+            ? t['com.affine.editor.bi-directional-link-panel.hide']()
+            : t['com.affine.editor.bi-directional-link-panel.show']()}
+        </Button>
       </div>
 
       {show && (

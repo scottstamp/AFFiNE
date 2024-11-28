@@ -724,7 +724,7 @@ async function crawlingDocData({
           content: block.get('prop:latex')?.toString() ?? '',
           yblock: block,
         });
-      } else if (bookmarkFlavours.includes(flavour)) {
+      } else if (bookmarkFlavours.has(flavour)) {
         blockDocuments.push({
           docId,
           flavour,

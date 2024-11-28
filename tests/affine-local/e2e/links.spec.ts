@@ -7,6 +7,7 @@ import { coreUrl, openHomePage } from '@affine-test/kit/utils/load-page';
 import {
   clickNewPageButton,
   createLinkedPage,
+  getBlockSuiteEditorTitle,
   waitForEmptyEditor,
 } from '@affine-test/kit/utils/page-logic';
 import { expect, type Locator } from '@playwright/test';
@@ -417,4 +418,32 @@ test('@ popover with click "select a specific date" should show a date picker', 
   await expect(
     page.locator('affine-reference:has-text("' + date + '")')
   ).toBeVisible();
+});
+
+test('linked doc should show markdown preview in the backlink section', async ({
+  page,
+}) => {
+  await waitForEmptyEditor(page);
+  await page.keyboard.type('source page');
+  await page.keyboard.press('Enter');
+
+  await page.keyboard.type('some inline content');
+  await page.keyboard.press('Enter');
+
+  await createLinkedPage(page, 'Test Page');
+  await page.locator('affine-reference:has-text("Test Page")').click();
+
+  await expect(getBlockSuiteEditorTitle(page)).toHaveText('Test Page');
+  await page
+    .getByRole('button', {
+      name: 'Show',
+    })
+    .click();
+
+  await page.getByRole('button', { name: 'source page' }).click();
+
+  await expect(page.locator('text-renderer')).toContainText(
+    'some inline content'
+  );
+  await expect(page.locator('text-renderer')).toContainText('Test Page');
 });

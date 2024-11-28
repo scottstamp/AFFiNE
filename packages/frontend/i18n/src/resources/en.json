@@ -1486,5 +1486,7 @@
   "com.affine.editor.at-menu.import": "Import",
   "com.affine.editor.at-menu.more-docs-hint": "{{count}} more docs",
   "com.affine.editor.at-menu.journal": "Journal",
-  "com.affine.editor.at-menu.date-picker": "Select a specific date"
+  "com.affine.editor.at-menu.date-picker": "Select a specific date",
+  "com.affine.editor.bi-directional-link-panel.show": "Show",
+  "com.affine.editor.bi-directional-link-panel.hide": "Hide"
 }

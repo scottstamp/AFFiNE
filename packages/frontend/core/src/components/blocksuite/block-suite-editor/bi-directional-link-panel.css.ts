@@ -50,7 +50,6 @@ export const title = style({
 });
 
 export const showButton = style({
-  width: '56px',
   height: '28px',
   borderRadius: '8px',
   border: '1px solid ' + cssVar('--affine-border-color'),
