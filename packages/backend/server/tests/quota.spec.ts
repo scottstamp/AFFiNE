@@ -6,34 +6,59 @@ import ava from 'ava';
 
 import { AuthService } from '../src/core/auth';
 import {
+  FeatureModule,
+  FeatureService,
+  FeatureType,
+} from '../src/core/features';
+import {
+  QuotaBusinessType,
   QuotaManagementService,
   QuotaModule,
+  QuotaOverride,
+  QuotaOverrideService,
   QuotaService,
   QuotaType,
 } from '../src/core/quota';
 import { FreePlan, ProPlan } from '../src/core/quota/schema';
 import { StorageModule } from '../src/core/storage';
+import { WorkspaceResolver } from '../src/core/workspaces/resolvers';
 import { createTestingModule } from './utils';
+import { WorkspaceResolverMock } from './utils/feature';
 
 const test = ava as TestFn<{
   auth: AuthService;
+  feature: FeatureService;
   quota: QuotaService;
+  quotaOverride: QuotaOverrideService;
   quotaManager: QuotaManagementService;
+  workspace: WorkspaceResolver;
   module: TestingModule;
 }>;
 
 test.beforeEach(async t => {
   const module = await createTestingModule({
-    imports: [StorageModule, QuotaModule],
+    imports: [StorageModule, FeatureModule, QuotaModule],
+    providers: [WorkspaceResolver],
+    tapModule: module => {
+      module
+        .overrideProvider(WorkspaceResolver)
+        .useClass(WorkspaceResolverMock);
+    },
   });
 
+  const feature = module.get(FeatureService);
   const quota = module.get(QuotaService);
+  const quotaOverride = module.get(QuotaOverrideService);
   const quotaManager = module.get(QuotaManagementService);
+  const workspace = module.get(WorkspaceResolver);
   const auth = module.get(AuthService);
 
   t.context.module = module;
+  t.context.feature = feature;
   t.context.quota = quota;
+  t.context.quotaOverride = quotaOverride;
   t.context.quotaManager = quotaManager;
+  t.context.workspace = workspace;
   t.context.auth = auth;
 });
 
@@ -127,4 +152,45 @@ test('should be able to check quota', async t => {
     freePlan.copilotActionLimit!,
     'should be free plan'
   );
+});
+
+test('should be able to override quota', async t => {
+  class TestQuotaOverride implements QuotaOverride {
+    get name(): string {
+      return TestQuotaOverride.name;
+    }
+    async overrideQuota(
+      _: string,
+      __: string,
+      features: FeatureType[],
+      quota: QuotaBusinessType
+    ): Promise<QuotaBusinessType> {
+      if (features.includes(FeatureType.TeamWorkspace)) {
+        return {
+          ...quota,
+          blobLimit: 1024,
+          businessBlobLimit: 1024,
+          memberLimit: 1,
+        };
+      }
+      return quota;
+    }
+  }
+  const { auth, feature, quotaOverride, quotaManager, workspace } = t.context;
+  quotaOverride.registerOverride(new TestQuotaOverride());
+
+  const u1 = await auth.signUp('test@affine.pro', '123456');
+  const w1 = await workspace.createWorkspace(u1, null);
+
+  const wq1 = await quotaManager.getWorkspaceUsage(w1.id);
+  t.is(wq1.blobLimit, 1024 * 1024 * 10, 'should be 10MB');
+  t.is(wq1.businessBlobLimit, 1024 * 1024 * 100, 'should be 100MB');
+  t.is(wq1.memberLimit, 3, 'should be 3');
+
+  await feature.addWorkspaceFeature(w1.id, FeatureType.TeamWorkspace, 'test');
+  const wq2 = await quotaManager.getWorkspaceUsage(w1.id);
+  console.log(wq2);
+  t.is(wq2.blobLimit, 1024, 'should be override to 1KB');
+  t.is(wq2.businessBlobLimit, 1024, 'should be override to 1KB');
+  t.is(wq2.memberLimit, 1, 'should be override to 1');
 });

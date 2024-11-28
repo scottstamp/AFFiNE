@@ -73,6 +73,14 @@ export const Features: Feature[] = [
     version: 1,
     configs: {},
   },
+  {
+    feature: FeatureType.TeamWorkspace,
+    type: FeatureKind.Feature,
+    version: 1,
+    configs: {
+      seatStorage: 20 * 1024 * 1024 * 1024,
+    },
+  },
 ];
 
 /// ======== schema infer ========
