@@ -120,3 +120,9 @@ export function formatSize(bytes: number, decimals: number = 2): string {
 export function formatDate(ms: number): string {
   return `${(ms / OneDay).toFixed(0)} days`;
 }
+
+export type QuotaBusinessType = QuotaQueryType & {
+  businessBlobLimit: number;
+  team: boolean;
+  unlimited: boolean;
+};

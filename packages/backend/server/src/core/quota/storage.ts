@@ -3,14 +3,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { FeatureService, FeatureType } from '../features';
 import { PermissionService } from '../permission';
 import { WorkspaceBlobStorage } from '../storage';
-import { OneGB } from './constant';
+import { OneGB, OneMB } from './constant';
+import { QuotaOverrideService } from './override';
 import { QuotaService } from './service';
-import { formatSize, QuotaQueryType } from './types';
-
-type QuotaBusinessType = QuotaQueryType & {
-  businessBlobLimit: number;
-  unlimited: boolean;
-};
+import { formatSize, type QuotaBusinessType } from './types';
 
 @Injectable()
 export class QuotaManagementService {
@@ -20,7 +16,8 @@ export class QuotaManagementService {
     private readonly feature: FeatureService,
     private readonly quota: QuotaService,
     private readonly permissions: PermissionService,
-    private readonly storage: WorkspaceBlobStorage
+    private readonly storage: WorkspaceBlobStorage,
+    private readonly override: QuotaOverrideService
   ) {}
 
   async getUserQuota(userId: string) {
@@ -135,6 +132,10 @@ export class QuotaManagementService {
       workspaceId,
       FeatureType.UnlimitedWorkspace
     );
+    const team = await this.feature.hasWorkspaceFeature(
+      workspaceId,
+      FeatureType.TeamWorkspace
+    );
 
     const quota = {
       name,
@@ -146,18 +147,44 @@ export class QuotaManagementService {
       copilotActionLimit,
       humanReadable,
       usedSize,
+      team,
       unlimited,
       memberCount,
     };
 
     if (quota.unlimited) {
       return this.mergeUnlimitedQuota(quota);
+    } else if (quota.team) {
+      return this.override.overrideQuota(
+        owner.id,
+        workspaceId,
+        this.mergeTeamQuota(quota)
+      );
     }
 
     return quota;
   }
 
-  private mergeUnlimitedQuota(orig: QuotaBusinessType) {
+  private mergeTeamQuota(orig: QuotaBusinessType): QuotaBusinessType {
+    const storageQuota = 100 * OneGB;
+    const blobLimit = 500 * OneMB;
+    // need update blob/member/storage limit with subscription
+    return {
+      ...orig,
+      storageQuota,
+      blobLimit,
+      businessBlobLimit: blobLimit,
+      memberLimit: orig.memberCount,
+      humanReadable: {
+        ...orig.humanReadable,
+        name: 'Team',
+        blobLimit: formatSize(blobLimit),
+        storageQuota: formatSize(storageQuota),
+      },
+    };
+  }
+
+  private mergeUnlimitedQuota(orig: QuotaBusinessType): QuotaBusinessType {
     return {
       ...orig,
       storageQuota: 1000 * OneGB,

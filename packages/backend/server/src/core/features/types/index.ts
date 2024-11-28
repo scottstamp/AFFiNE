@@ -4,6 +4,7 @@ import { featureAdministrator } from './admin';
 import { FeatureType } from './common';
 import { featureCopilot } from './copilot';
 import { featureAIEarlyAccess, featureEarlyAccess } from './early-access';
+import { featureTeamWorkspace } from './team-workspace';
 import { featureUnlimitedCopilot } from './unlimited-copilot';
 import { featureUnlimitedWorkspace } from './unlimited-workspace';
 
@@ -88,6 +89,7 @@ export const FeatureSchema = commonFeatureSchema
       featureUnlimitedWorkspace,
       featureUnlimitedCopilot,
       featureAdministrator,
+      featureTeamWorkspace,
     ])
   );
 

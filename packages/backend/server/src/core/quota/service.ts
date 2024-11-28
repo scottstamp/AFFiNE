@@ -88,7 +88,7 @@ export class QuotaService {
     expiredAt?: Date
   ) {
     await this.prisma.$transaction(async tx => {
-      const hasSameActivatedQuota = await this.hasQuota(userId, quota, tx);
+      const hasSameActivatedQuota = await this.hasUserQuota(userId, quota, tx);
 
       if (hasSameActivatedQuota) {
         // don't need to switch
@@ -133,7 +133,7 @@ export class QuotaService {
     });
   }
 
-  async hasQuota(userId: string, quota: QuotaType, tx?: PrismaTransaction) {
+  async hasUserQuota(userId: string, quota: QuotaType, tx?: PrismaTransaction) {
     const executor = tx ?? this.prisma;
 
     return executor.userFeature
