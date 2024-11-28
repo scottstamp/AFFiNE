@@ -189,7 +189,6 @@ test('should be able to override quota', async t => {
 
   await feature.addWorkspaceFeature(w1.id, FeatureType.TeamWorkspace, 'test');
   const wq2 = await quotaManager.getWorkspaceUsage(w1.id);
-  console.log(wq2);
   t.is(wq2.blobLimit, 1024, 'should be override to 1KB');
   t.is(wq2.businessBlobLimit, 1024, 'should be override to 1KB');
   t.is(wq2.memberLimit, 1, 'should be override to 1');
