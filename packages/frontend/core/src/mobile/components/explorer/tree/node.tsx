@@ -3,7 +3,7 @@ import type { BaseExplorerTreeNodeProps } from '@affine/core/modules/explorer';
 import { ExplorerTreeContext } from '@affine/core/modules/explorer';
 import { WorkbenchLink } from '@affine/core/modules/workbench';
 import { extractEmojiIcon } from '@affine/core/utils';
-import { ArrowDownSmallIcon } from '@blocksuite/icons/rc';
+import { ArrowDownSmallIcon, MoreHorizontalIcon } from '@blocksuite/icons/rc';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { assignInlineVars } from '@vanilla-extract/dynamic';
 import {
@@ -15,6 +15,7 @@ import {
   useState,
 } from 'react';
 
+import { SwipeMenu } from '../../swipe-menu';
 import * as styles from './node.css';
 
 interface ExplorerTreeNodeProps extends BaseExplorerTreeNodeProps {}
@@ -43,6 +44,7 @@ export const ExplorerTreeNode = ({
   const clickForCollapse = !onClick && !to && !disabled;
   const [childCount, setChildCount] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const { emoji, name } = useMemo(() => {
     if (!extractEmojiAsIcon || !rawName) {
@@ -160,15 +162,32 @@ export const ExplorerTreeNode = ({
       ref={rootRef}
       {...otherProps}
     >
-      <div className={styles.contentContainer} data-open={!collapsed}>
-        {to ? (
-          <LinkComponent to={to} className={styles.linkItemRoot}>
-            {content}
-          </LinkComponent>
-        ) : (
-          <div>{content}</div>
-        )}
-      </div>
+      <SwipeMenu
+        onExecute={useCallback(() => setMenuOpen(true), [])}
+        menu={
+          <MobileMenu
+            rootOptions={useMemo(
+              () => ({ open: menuOpen, onOpenChange: setMenuOpen }),
+              [menuOpen]
+            )}
+            items={menuOperations.map(({ view, index }) => (
+              <Fragment key={index}>{view}</Fragment>
+            ))}
+          >
+            <MoreHorizontalIcon fontSize={24} />
+          </MobileMenu>
+        }
+      >
+        <div className={styles.contentContainer} data-open={!collapsed}>
+          {to ? (
+            <LinkComponent to={to} className={styles.linkItemRoot}>
+              {content}
+            </LinkComponent>
+          ) : (
+            <div>{content}</div>
+          )}
+        </div>
+      </SwipeMenu>
       <Collapsible.Content>
         {/* For lastInGroup check, the placeholder must be placed above all children in the dom */}
         <div className={styles.collapseContentPlaceholder}>

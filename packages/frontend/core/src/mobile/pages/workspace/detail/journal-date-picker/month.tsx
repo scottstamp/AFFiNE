@@ -1,3 +1,4 @@
+import { SwipeHelper } from '@affine/core/mobile/utils';
 import anime from 'animejs';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
@@ -20,7 +21,6 @@ import {
 } from './constants';
 import { JournalDatePickerContext } from './context';
 import * as styles from './month.css';
-import { SwipeHelper } from './swipe-helper';
 import { getFirstDayOfMonth } from './utils';
 import { WeekRow } from './week';
 export interface MonthViewProps {
@@ -106,9 +106,9 @@ export const MonthView = ({ viewportHeight }: MonthViewProps) => {
           setCursor(selected);
         }
       },
-      onSwipeEnd: ({ deltaX }) => {
+      onSwipeEnd: ({ deltaX, speedX }) => {
         setSwiping(false);
-        if (Math.abs(deltaX) > HORIZONTAL_SWIPE_THRESHOLD) {
+        if (Math.abs(deltaX) > HORIZONTAL_SWIPE_THRESHOLD || speedX > 100) {
           animateTo(deltaX > 0 ? -1 : 1);
         } else {
           animateTo(0);

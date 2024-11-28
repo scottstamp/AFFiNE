@@ -233,7 +233,7 @@ export const useExplorerDocNodeOperationsMenu = (
         ),
       },
       {
-        index: 99,
+        index: 97,
         view: (
           <MenuItem
             prefixIcon={<LinkedPageIcon />}
@@ -244,7 +244,7 @@ export const useExplorerDocNodeOperationsMenu = (
         ),
       },
       {
-        index: 99,
+        index: 98,
         view: (
           <MenuItem prefixIcon={<DuplicateIcon />} onClick={handleDuplicate}>
             {t['com.affine.header.option.duplicate']()}

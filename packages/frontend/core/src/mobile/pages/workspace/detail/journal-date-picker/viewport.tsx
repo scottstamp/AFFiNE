@@ -1,4 +1,5 @@
 import { useGlobalEvent } from '@affine/core/mobile/hooks/use-global-events';
+import { SwipeHelper } from '@affine/core/mobile/utils';
 import anime from 'animejs';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
@@ -20,7 +21,6 @@ import {
 } from './constants';
 import { JournalDatePickerContext } from './context';
 import { MonthView } from './month';
-import { SwipeHelper } from './swipe-helper';
 import * as styles from './viewport.css';
 import { WeekHeader, WeekRowSwipe } from './week';
 
@@ -97,8 +97,8 @@ export const ResizeViewport = ({
         setDragOffset(deltaY);
         setIsDragging(true);
       },
-      onSwipeEnd: ({ deltaY }) => {
-        if (Math.abs(deltaY) > 2 * CELL_HEIGHT) {
+      onSwipeEnd: ({ deltaY, speedY }) => {
+        if (Math.abs(deltaY) > 2 * CELL_HEIGHT || speedY > 100) {
           handleToggleModeWithAnimation(
             mode === 'week' ? 'month' : 'week',
             deltaY

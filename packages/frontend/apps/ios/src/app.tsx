@@ -1,6 +1,7 @@
 import { AffineContext } from '@affine/core/components/context';
 import { AppFallback } from '@affine/core/mobile/components/app-fallback';
 import { configureMobileModules } from '@affine/core/mobile/modules';
+import { HapticProvider } from '@affine/core/mobile/modules/haptics';
 import { NavigationGestureProvider } from '@affine/core/mobile/modules/navigation-gesture';
 import { VirtualKeyboardProvider } from '@affine/core/mobile/modules/virtual-keyboard';
 import { router } from '@affine/core/mobile/router';
@@ -22,6 +23,7 @@ import {
 } from '@affine/core/modules/workspace-engine';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
+import { Haptics } from '@capacitor/haptics';
 import { Keyboard } from '@capacitor/keyboard';
 import {
   Framework,
@@ -93,6 +95,14 @@ framework.impl(NavigationGestureProvider, {
   isEnabled: () => NavigationGesture.isEnabled(),
   enable: () => NavigationGesture.enable(),
   disable: () => NavigationGesture.disable(),
+});
+framework.impl(HapticProvider, {
+  impact: options => Haptics.impact(options as any),
+  vibrate: options => Haptics.vibrate(options as any),
+  notification: options => Haptics.notification(options as any),
+  selectionStart: () => Haptics.selectionStart(),
+  selectionChanged: () => Haptics.selectionChanged(),
+  selectionEnd: () => Haptics.selectionEnd(),
 });
 const frameworkProvider = framework.provider();
 

@@ -1,3 +1,4 @@
+import { SwipeHelper } from '@affine/core/mobile/utils';
 import { useI18n } from '@affine/i18n';
 import anime from 'animejs';
 import clsx from 'clsx';
@@ -16,7 +17,6 @@ import {
 import { DATE_FORMAT, HORIZONTAL_SWIPE_THRESHOLD } from './constants';
 import { JournalDatePickerContext } from './context';
 import { DayCell } from './day-cell';
-import { SwipeHelper } from './swipe-helper';
 import { getFirstDayOfWeek } from './utils';
 import * as styles from './week.css';
 
@@ -115,10 +115,10 @@ export const WeekRowSwipe = ({ start }: WeekRowProps) => {
           setCursor(start);
         }
       },
-      onSwipeEnd({ deltaX }) {
+      onSwipeEnd({ deltaX, speedX }) {
         setSwiping(false);
 
-        if (Math.abs(deltaX) > HORIZONTAL_SWIPE_THRESHOLD) {
+        if (Math.abs(deltaX) > HORIZONTAL_SWIPE_THRESHOLD || speedX > 100) {
           animateTo(deltaX > 0 ? -1 : 1);
         } else {
           animateTo(0);
