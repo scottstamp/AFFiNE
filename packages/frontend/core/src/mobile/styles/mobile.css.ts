@@ -10,6 +10,7 @@ globalStyle(':root', {
     [globalVars.appTabHeight]: BUILD_CONFIG.isIOS ? '49px' : '62px',
   },
   userSelect: 'none',
+  WebkitUserSelect: 'none',
 });
 
 globalStyle('body', {
