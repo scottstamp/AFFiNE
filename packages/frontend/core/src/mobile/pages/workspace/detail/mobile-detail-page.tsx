@@ -253,6 +253,17 @@ const MobileDetailPage = ({
               <PageHeaderMenuButton />
             </>
           }
+          bottom={
+            date ? (
+              <JournalDatePicker
+                date={date}
+                onChange={handleDateChange}
+                withDotDates={allJournalDates}
+                className={styles.journalDatePicker}
+              />
+            ) : null
+          }
+          bottomSpacer={94}
         >
           {date ? (
             <span className={bodyEmphasized}>
@@ -260,19 +271,6 @@ const MobileDetailPage = ({
             </span>
           ) : null}
         </PageHeader>
-        {date ? (
-          <JournalDatePicker
-            date={date}
-            onChange={handleDateChange}
-            withDotDates={allJournalDates}
-            className={styles.journalDatePickerSticky}
-            data-standalone={
-              environment.isPwa || BUILD_CONFIG.isAndroid || BUILD_CONFIG.isIOS
-                ? ''
-                : undefined
-            }
-          />
-        ) : null}
         <DetailPageImpl />
         {date ? (
           <AppTabs background={cssVarV2('layer/background/primary')} />

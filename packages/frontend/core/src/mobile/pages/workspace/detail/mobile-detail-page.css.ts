@@ -94,14 +94,6 @@ export const journalIconButton = style({
   display: 'flex',
 });
 
-export const journalDatePickerSticky = style({
+export const journalDatePicker = style({
   background: cssVarV2('layer/background/primary'),
-  position: 'sticky',
-  zIndex: 1,
-  top: 56,
-  selectors: {
-    '&[data-standalone]': {
-      top: 'calc(44px + env(safe-area-inset-top, 12px))',
-    },
-  },
 });

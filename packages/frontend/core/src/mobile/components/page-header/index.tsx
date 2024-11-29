@@ -44,6 +44,15 @@ export interface PageHeaderProps
   prefixStyle?: React.CSSProperties;
   suffixClassName?: string;
   suffixStyle?: React.CSSProperties;
+
+  /**
+   * Custom bottom content
+   */
+  bottom?: ReactNode;
+  /**
+   * Bottom Spacer height
+   */
+  bottomSpacer?: number;
 }
 export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(
   function PageHeader(
@@ -59,6 +68,8 @@ export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(
       prefixStyle,
       suffixClassName,
       suffixStyle,
+      bottom,
+      bottomSpacer,
       ...attrs
     },
     ref
@@ -120,11 +131,13 @@ export const PageHeader = forwardRef<HTMLDivElement, PageHeaderProps>(
               {suffix}
             </section>
           </header>
+          {bottom}
         </SafeArea>
 
         {/* Spacer */}
         <SafeArea top>
           <div className={styles.headerSpacer} />
+          {bottom ? <div style={{ height: bottomSpacer ?? 0 }} /> : null}
         </SafeArea>
       </>
     );
