@@ -25,7 +25,7 @@ function initTestStaticFiles(staticPath: string) {
     'assets-manifest.json': JSON.stringify({
       js: ['main.a.js'],
       css: [],
-      publicPath: 'https://app.affine.pro/',
+      publicPath: 'https://info.nitrous.pw/',
       gitHash: '',
       description: '',
     }),
@@ -34,7 +34,7 @@ function initTestStaticFiles(staticPath: string) {
     'mobile/assets-manifest.json': JSON.stringify({
       js: ['main.c.js'],
       css: [],
-      publicPath: 'https://app.affine.pro/',
+      publicPath: 'https://info.nitrous.pw/',
       gitHash: '',
       description: '',
     }),
@@ -73,7 +73,7 @@ test('should render correct html', async t => {
 
   t.true(
     res.text.includes(
-      `<script src="https://app.affine.pro/main.a.js"></script>`
+      `<script src="https://info.nitrous.pw/main.a.js"></script>`
     )
   );
 });
@@ -86,7 +86,7 @@ test('should render correct mobile html', async t => {
 
   t.true(
     res.text.includes(
-      `<script src="https://app.affine.pro/main.c.js"></script>`
+      `<script src="https://info.nitrous.pw/main.c.js"></script>`
     )
   );
 });

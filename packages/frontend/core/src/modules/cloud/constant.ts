@@ -57,7 +57,7 @@ export const BUILD_IN_SERVERS: (ServerMetadata & { config: ServerConfig })[] =
         ? [
             {
               id: 'affine-cloud',
-              baseUrl: 'https://app.affine.pro',
+              baseUrl: 'https://info.nitrous.pw',
               config: {
                 serverName: 'Affine Cloud',
                 features: [
@@ -129,7 +129,7 @@ export const BUILD_IN_SERVERS: (ServerMetadata & { config: ServerConfig })[] =
               ? [
                   {
                     id: 'affine-cloud',
-                    baseUrl: 'https://affine.fail',
+                    baseUrl: 'https://info.nitrous.pw',
                     config: {
                       serverName: 'Affine Cloud',
                       features: [

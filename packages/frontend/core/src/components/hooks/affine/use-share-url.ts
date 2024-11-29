@@ -22,7 +22,7 @@ export type UseSharingUrl = {
 /**
  * To generate a url like
  *
- * https://app.affine.pro/workspace/workspaceId/docId?mode=DocMode&elementIds=seletedElementIds&blockIds=selectedBlockIds
+ * https://info.nitrous.pw/workspace/workspaceId/docId?mode=DocMode&elementIds=seletedElementIds&blockIds=selectedBlockIds
  */
 export const generateUrl = ({
   baseUrl,

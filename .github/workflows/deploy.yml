@@ -149,11 +149,11 @@ jobs:
         id: set_info
         run: |
           if [ "${{ github.event.inputs.flavor }}" = "canary" ]; then
-            echo "deployed_url=https://affine.fail" >> $GITHUB_OUTPUT
+            echo "deployed_url=https://info.nitrous.pw" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.inputs.flavor }}" = "beta" ]; then
             echo "deployed_url=https://insider.affine.pro" >> $GITHUB_OUTPUT
           elif [ "${{ github.event.inputs.flavor }}" = "stable" ]; then
-            echo "deployed_url=https://app.affine.pro" >> $GITHUB_OUTPUT
+            echo "deployed_url=https://info.nitrous.pw" >> $GITHUB_OUTPUT
           else
             exit 1
           fi

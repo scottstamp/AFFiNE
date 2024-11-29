@@ -382,7 +382,7 @@ export const createConfiguration: (
       proxy: [
         {
           context: '/api/worker/',
-          target: 'https://affine.fail',
+          target: 'https://info.nitrous.pw',
           changeOrigin: true,
           secure: false,
         },

@@ -23,7 +23,7 @@ export function getBuildConfig(buildFlags: BuildFlags): BUILD_CONFIG_TYPE {
 
         isSelfHosted: process.env.SELF_HOSTED === 'true',
         appBuildType: 'stable' as const,
-        serverUrlPrefix: 'https://app.affine.pro',
+        serverUrlPrefix: 'https://info.nitrous.pw',
         appVersion: packageJson.version,
         editorVersion: packageJson.devDependencies['@blocksuite/affine'],
         githubUrl: 'https://github.com/toeverything/AFFiNE',
@@ -54,7 +54,7 @@ export function getBuildConfig(buildFlags: BuildFlags): BUILD_CONFIG_TYPE {
       return {
         ...this.stable,
         appBuildType: 'canary' as const,
-        serverUrlPrefix: 'https://affine.fail',
+        serverUrlPrefix: 'https://info.nitrous.pw',
         changelogUrl: 'https://github.com/toeverything/AFFiNE/releases',
       };
     },

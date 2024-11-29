@@ -1,8 +1,8 @@
 const ALLOW_ORIGIN = [
   'https://affine.pro',
-  'https://app.affine.pro',
+  'https://info.nitrous.pw',
   'https://insider.affine.pro',
-  'https://affine.fail',
+  'https://info.nitrous.pw',
 ];
 
 function isString(s: any): boolean {
