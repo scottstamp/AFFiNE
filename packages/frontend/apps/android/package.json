@@ -14,7 +14,7 @@
     "@affine/core": "workspace:*",
     "@affine/i18n": "workspace:*",
     "@blocksuite/affine": "0.18.1",
-    "@blocksuite/icons": "2.1.71",
+    "@blocksuite/icons": "2.1.72",
     "@capacitor/android": "^6.1.2",
     "@capacitor/core": "^6.1.2",
     "@sentry/react": "^8.0.0",

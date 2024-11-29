@@ -214,7 +214,7 @@ __metadata:
     "@affine/core": "workspace:*"
     "@affine/i18n": "workspace:*"
     "@blocksuite/affine": "npm:0.18.1"
-    "@blocksuite/icons": "npm:2.1.71"
+    "@blocksuite/icons": "npm:2.1.72"
     "@capacitor/android": "npm:^6.1.2"
     "@capacitor/cli": "npm:^6.1.2"
     "@capacitor/core": "npm:^6.1.2"
@@ -318,7 +318,7 @@ __metadata:
     "@atlaskit/pragmatic-drag-and-drop": "npm:^1.2.1"
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "npm:^1.0.3"
     "@blocksuite/affine": "npm:0.18.1"
-    "@blocksuite/icons": "npm:2.1.71"
+    "@blocksuite/icons": "npm:2.1.72"
     "@chromatic-com/storybook": "npm:^3.0.0"
     "@emotion/react": "npm:^11.11.4"
     "@emotion/styled": "npm:^11.11.5"
@@ -401,7 +401,7 @@ __metadata:
     "@affine/templates": "workspace:*"
     "@affine/track": "workspace:*"
     "@blocksuite/affine": "npm:0.18.1"
-    "@blocksuite/icons": "npm:2.1.71"
+    "@blocksuite/icons": "npm:2.1.72"
     "@capacitor/app": "npm:^6.0.1"
     "@capacitor/browser": "npm:^6.0.3"
     "@dnd-kit/core": "npm:^6.1.0"
@@ -613,7 +613,7 @@ __metadata:
     "@affine/core": "workspace:*"
     "@affine/i18n": "workspace:*"
     "@blocksuite/affine": "npm:0.18.1"
-    "@blocksuite/icons": "npm:2.1.71"
+    "@blocksuite/icons": "npm:2.1.72"
     "@capacitor/app": "npm:^6.0.1"
     "@capacitor/browser": "npm:^6.0.3"
     "@capacitor/cli": "npm:^6.1.2"
@@ -639,7 +639,7 @@ __metadata:
     "@affine/core": "workspace:*"
     "@affine/i18n": "workspace:*"
     "@blocksuite/affine": "npm:0.18.1"
-    "@blocksuite/icons": "npm:2.1.71"
+    "@blocksuite/icons": "npm:2.1.72"
     "@sentry/react": "npm:^8.0.0"
     "@types/react": "npm:^18.2.75"
     "@types/react-dom": "npm:^18.2.24"
@@ -2822,9 +2822,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@blocksuite/icons@npm:2.1.71, @blocksuite/icons@npm:^2.1.70":
-  version: 2.1.71
-  resolution: "@blocksuite/icons@npm:2.1.71"
+"@blocksuite/icons@npm:2.1.72, @blocksuite/icons@npm:^2.1.70":
+  version: 2.1.72
+  resolution: "@blocksuite/icons@npm:2.1.72"
   peerDependencies:
     "@types/react": ^18.0.25
     lit: ^3.1.1
@@ -2834,7 +2834,7 @@ __metadata:
       optional: true
     react:
       optional: true
-  checksum: 10/1c2fedf3a49d0136c5477de19aa6f0adeb421bda5f77def2aadce9a9bc78d4771b230a55c7cf548e8ae36c0e4cc892f43a5f19e6b99f6f6e7be672c71cf9b5a3
+  checksum: 10/58a2e122e3ad6a61aaa7a16856181160c1a8fbc586d4b00cf66f5cd19ef1e47e2be6558fb822ab05e3b0f1d7a10a67225a31d644ad703e6523b2e70a58da9c61
   languageName: node
   linkType: hard
 

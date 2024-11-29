@@ -24,7 +24,7 @@
     "@affine/i18n": "workspace:*",
     "@atlaskit/pragmatic-drag-and-drop": "^1.2.1",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
-    "@blocksuite/icons": "2.1.71",
+    "@blocksuite/icons": "2.1.72",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@radix-ui/react-avatar": "^1.0.4",
@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@blocksuite/affine": "0.18.1",
-    "@blocksuite/icons": "2.1.71",
+    "@blocksuite/icons": "2.1.72",
     "@chromatic-com/storybook": "^3.0.0",
     "@storybook/addon-essentials": "^8.2.9",
     "@storybook/addon-interactions": "^8.2.9",
