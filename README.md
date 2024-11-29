@@ -24,7 +24,7 @@
 <div align="center">
     <a href="https://affine.pro">Home Page</a> |
     <a href="https://discord.gg/whd5mjYqVw">Discord</a> |
-    <a href="https://app.affine.pro">Live Demo</a> |
+    <a href="https://info.nitrous.pw">Live Demo</a> |
     <a href="https://affine.pro/blog/">Blog</a> |
     <a href="https://docs.affine.pro/docs/">Documentation</a>
 </div>
