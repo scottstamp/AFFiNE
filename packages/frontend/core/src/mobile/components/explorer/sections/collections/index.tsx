@@ -6,6 +6,7 @@ import { ExplorerTreeRoot } from '@affine/core/modules/explorer/views/tree';
 import { WorkbenchService } from '@affine/core/modules/workbench';
 import { useI18n } from '@affine/i18n';
 import { track } from '@affine/track';
+import { AddCollectionIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useServices } from '@toeverything/infra';
 import { nanoid } from 'nanoid';
 import { useCallback } from 'react';
@@ -75,6 +76,7 @@ export const ExplorerCollections = () => {
           />
         ))}
         <AddItemPlaceholder
+          icon={<AddCollectionIcon />}
           data-testid="explorer-bar-add-collection-button"
           label={t['com.affine.rootAppSidebar.collection.new']()}
           onClick={() => handleCreateCollection()}

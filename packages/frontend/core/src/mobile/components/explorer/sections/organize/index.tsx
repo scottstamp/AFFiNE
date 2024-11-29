@@ -6,6 +6,7 @@ import {
 import { OrganizeService } from '@affine/core/modules/organize';
 import { useI18n } from '@affine/i18n';
 import track from '@affine/track';
+import { AddOrganizeIcon } from '@blocksuite/icons/rc';
 import { useLiveData, useServices } from '@toeverything/infra';
 import { useCallback, useState } from 'react';
 
@@ -54,6 +55,7 @@ export const ExplorerOrganize = () => {
           <ExplorerFolderNode key={child.id} nodeId={child.id as string} />
         ))}
         <AddItemPlaceholder
+          icon={<AddOrganizeIcon />}
           data-testid="explorer-bar-add-organize-button"
           label={t['com.affine.rootAppSidebar.organize.add-folder']()}
           onClick={() => setOpenNewFolderDialog(true)}
